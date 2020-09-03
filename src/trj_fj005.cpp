@@ -41,6 +41,24 @@ bool trajectory1_initflag = false;
 // Initial waypoints
 deque<Vec8> waypoints;
 
+void Mission_Generator(){
+  // Waypoints
+  Vec8 wp; // state x y z yaw v av waittime
+  wp << 1, 0, 0 , 5, 0, 1, 1, 1 ;   // state = 1; takeoff no heading change.
+  waypoints.push_back(wp);
+  wp << 2, 5, 5, 5, 0,  1, 1, 1 ;   // state = 2; constant velocity trajectory.
+  waypoints.push_back(wp);
+  wp << 2,-5, 5, 5, 0,  1, 1, 1 ;
+  waypoints.push_back(wp);
+  wp << 2,-5,-5, 5, 0,  1, 1, 1 ;
+  waypoints.push_back(wp);
+  wp << 2, 5,-5, 5, 0,  1, 1, 1 ;
+  waypoints.push_back(wp);
+  wp << 4, 0, 0, 5, 0,  1, 1, 1 ;  // state = 4; constant velocity RTL but with altitude.
+  waypoints.push_back(wp);
+  wp << 5, 0, 0, 0, 0,  1, 1, 10;    // state = 5; land.
+  waypoints.push_back(wp);
+}
 void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad,
                     double velocity, double angular_velocity){
   Quaterniond q(uav_lp_qw,uav_lp_qx,uav_lp_qy,uav_lp_qz);
@@ -90,25 +108,6 @@ void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad
     traj1 << dt, xyz[0], xyz[1], xyz[2], q.w(), q.x(), q.y(), q.z();
     trajectory1.push_back(traj1);
   }
-}
-
-void Mission_Generator(){
-  // Waypoints
-  Vec8 wp; // state x y z yaw v av waittime
-  wp << 1, 0, 0 , 5, 0, 1, 1, 1 ;   // state = 1; takeoff no heading change.
-  waypoints.push_back(wp);
-  wp << 2, 5, 5, 5, 0,  1, 1, 1 ;   // state = 2; constant velocity trajectory.
-  waypoints.push_back(wp);
-  wp << 2,-5, 5, 5, 0,  1, 1, 1 ;
-  waypoints.push_back(wp);
-  wp << 2,-5,-5, 5, 0,  1, 1, 1 ;
-  waypoints.push_back(wp);
-  wp << 2, 5,-5, 5, 0,  1, 1, 1 ;
-  waypoints.push_back(wp);
-  wp << 4, 0, 0, 5, 0,  1, 1, 1 ;  // state = 4; constant velocity RTL but with altitude.
-  waypoints.push_back(wp);
-  wp << 5, 0, 0, 0, 0,  1, 1, 10;    // state = 5; land.
-  waypoints.push_back(wp);
 }
 
 void traj_pub(){
