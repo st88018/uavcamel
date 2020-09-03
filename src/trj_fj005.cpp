@@ -135,8 +135,8 @@ void traj_pub(){
 }
 
 void Finite_state_WP_mission(){
-  // Generate trajectory while mission stage change
   
+  // Generate trajectory while mission stage change
   if (Mission_stage != Current_Mission_stage){
     Vec8 traj1;
     Current_Mission_stage = Mission_stage;  //Update Current_Mission_stage
@@ -144,8 +144,7 @@ void Finite_state_WP_mission(){
     Quaterniond q(uav_lp_qw,uav_lp_qx,uav_lp_qy,uav_lp_qz);
     Vec3 current_rpy = Q2rpy(q);
     Mission_state = Current_stage_mission[0];
-    cout<<"!!!!: "<<Mission_state<<endl;
-
+    
     if (Mission_state == 1){ //state = 1 take off with no heading change
       constantVtraj(uav_lp_p[0], uav_lp_p[1], Current_stage_mission[3], current_rpy[2], Current_stage_mission[6], Current_stage_mission[7]);
       cout << "applied state 1" <<endl;
