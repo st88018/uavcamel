@@ -132,7 +132,6 @@ void traj_pub(){
   while (current_time - traj1_deque_front[0] > 0){
     trajectory1.pop_front();
     traj1_deque_front = trajectory1.front();
-    // cout << "ddt: " <<  current_time - traj1_information[0] - traj1_deque_front[0] << endl;
   }
    
   pose.header.frame_id = "world";
@@ -161,23 +160,23 @@ void Finite_state_WP_mission(){
     
     if (Mission_state == 1){ //state = 1 take off with no heading change
       constantVtraj(uav_lp_p[0], uav_lp_p[1], Current_stage_mission[3], current_rpy[2], Current_stage_mission[6], Current_stage_mission[7]);
-      cout << "applied state 1" <<endl;
+      // cout << "applied state 1" <<endl;
     }
     if (Mission_state == 2){ //state = 2; constant velocity trajectory with desired heading.
       constantVtraj(Current_stage_mission[1], Current_stage_mission[2], Current_stage_mission[3], Current_stage_mission[4], Current_stage_mission[5], Current_stage_mission[6]);
-      cout << "applied state 2" <<endl;
+      // cout << "applied state 2" <<endl;
     }
     if (Mission_state == 3){ //state = 3; constant velocity trajectory with no heading change.
       constantVtraj(Current_stage_mission[1], Current_stage_mission[2], Current_stage_mission[3], current_rpy[2], Current_stage_mission[5], Current_stage_mission[6]);
-      cout << "applied state 3" <<endl;
+      // cout << "applied state 3" <<endl;
     }
     if (Mission_state == 4){ //state = 4; constant velocity RTL but with altitude return to the takeoff heading.
       constantVtraj(takeoff_x, takeoff_y, Current_stage_mission[3], takeoff_yaw, Current_stage_mission[5], Current_stage_mission[6]);
-      cout << "applied state 4" <<endl;
+      // cout << "applied state 4" <<endl;
     }
     if (Mission_state == 5){ //state = 5; land.
       constantVtraj(takeoff_x, takeoff_y, takeoff_z-1, takeoff_yaw, Current_stage_mission[5], Current_stage_mission[6]);
-      cout << "applied state 5" <<endl;
+      // cout << "applied state 5" <<endl;
     }
     if (Current_stage_mission[7] != 0){ // Wait after finish stage.
       traj1 = trajectory1.back();
@@ -197,7 +196,6 @@ void Finite_state_WP_mission(){
     //Store the Trajectory information 
     //Trajectory staring time, Trajectory duration
     traj1_information = Vec2(ros::Time::now().toSec(),traj1[0]-1);
-    cout << "trajectory ready" << endl;
     
     // For Debug section plot the whole trajectory
     // int trajectorysize = trajectory1.size();
@@ -284,7 +282,6 @@ int main(int argc, char **argv)
   offb_set_mode.request.custom_mode = "OFFBOARD";
   mavros_msgs::CommandBool arm_cmd;
   arm_cmd.request.value = true;
-  cout << "change last_request A" << endl;
   ros::Time last_request = ros::Time::now();
   ros::Time init_time = ros::Time::now();
 
@@ -358,14 +355,15 @@ int main(int argc, char **argv)
     }
     
     int coutcounter;
-    if(coutcounter > 20){
+    if(coutcounter > 3){
       cout << "------------------------------------------------------------------------------" << endl;
-      cout << "Mission_Stage: " << Mission_stage << "    Mission_total_stage: " << waypoints.size() << "    Mission_State: " << Mission_state << endl;
+      cout << "Mission_Stage: " << Mission_stage << "    Mission_total_stage: " << waypoints.size() << endl;
+      cout << "Mission_State: " << Mission_state << endl;
       cout << "currentpos_x: " << uav_lp_x << " y: " << uav_lp_y << " z: "<< uav_lp_z << endl;
       cout << "desiredpos_x: " << pose.pose.position.x << " y: " << pose.pose.position.y << " z: "<< pose.pose.position.z << endl;
-      cout << "ROS_time: " << ros::Time::now() << endl;
       cout << "Trajectory_init_time: " << traj1_information[0] << endl;
-      cout << "Trajectory_end_time: " << traj1_information[1] <<endl; 
+      cout << "Trajectory_end_time: " << traj1_information[1] <<endl;
+      cout << "ROS_time: " << ros::Time::now() << endl; 
       cout << "Current_trajectory_size: " << trajectory1.size() << endl;
       cout << "------------------------------------------------------------------------------" << endl;
       coutcounter = 0;
