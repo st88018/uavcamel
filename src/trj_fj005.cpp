@@ -221,12 +221,9 @@ void uav_lp_cb(const geometry_msgs::PoseStamped::ConstPtr& pose){
   uav_lp_q = Vec4(uav_lp_qw,uav_lp_qx,uav_lp_qy,uav_lp_qz);
 }
 
-int main(int argc, char **argv)
-{
-  
+int main(int argc, char **argv){
   ros::init(argc, argv, "offboard_node");
   ros::NodeHandle nh("~");
-
   string configFilePath;
 
   takeoff_x = 0.0;
@@ -238,7 +235,6 @@ int main(int argc, char **argv)
   altitude_mission = 1;
 
   nh.getParam("Initialfromtakeoffpos", Initialfromtakeoffpos);
-
   ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>
       ("/mavros/state", 10, state_cb);
   ros::Subscriber uavposlp_sub = nh.subscribe<geometry_msgs::PoseStamped>
@@ -249,10 +245,8 @@ int main(int argc, char **argv)
       ("/mavros/cmd/arming");
   ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>
       ("/mavros/set_mode");
-
   //the setpoint publishing rate MUST be faster than 2Hz
   ros::Rate rate(25.0);
-
   //wait for FCU connection 
   cout << "Waiting for FCU connection " << endl;
   while(ros::ok() && !current_state.connected){
@@ -260,7 +254,6 @@ int main(int argc, char **argv)
     rate.sleep();
     cout << "Waiting for FCU connection " << endl;
   }
-
   //send a few setpoints before starting
   pose.header.frame_id = "world";
   pose.pose.position.x = 0.0;
@@ -282,7 +275,6 @@ int main(int argc, char **argv)
   arm_cmd.request.value = true;
   ros::Time last_request = ros::Time::now();
   ros::Time init_time = ros::Time::now();
-
   while(ros::ok()){
     /*Update takeoff Position and Mission**********************************************/
     if(Initialfromtakeoffpos)
