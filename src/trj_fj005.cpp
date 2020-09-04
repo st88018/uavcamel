@@ -59,6 +59,7 @@ void Mission_Generator(){
   wp << 5, 0, 0, 0, 0,  1, 1, 10;    // state = 5; land.
   waypoints.push_back(wp);
 }
+
 void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad,
                     double velocity, double angular_velocity){
   Quaterniond q(uav_lp_qw,uav_lp_qx,uav_lp_qy,uav_lp_qz);
@@ -83,6 +84,7 @@ void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad
 
   //initialize trajectory1
   trajectory1.clear();
+  double init_time = ros::Time::now().toSec();
 
   int wpc = duration/Trajectory_timestep;
   for (int i=0; i<wpc; i++){
@@ -105,16 +107,29 @@ void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad
     }
 
     Vec8 traj1;
-    traj1 << dt, xyz[0], xyz[1], xyz[2], q.w(), q.x(), q.y(), q.z();
+    traj1 << dt+init_time, xyz[0], xyz[1], xyz[2], q.w(), q.x(), q.y(), q.z();
     trajectory1.push_back(traj1);
   }
 }
+
+// For minimun jerk trajectory
+// void arrangeT(deque ts, deque waypts, double T){
+
+// }
+
+// void calc_tvec(deque tvec, int t, int n_oder, int r){
+
+// }
+
+// void computeQ (deque Q, int n, int r, double t1, double t2){
+
+// }
 
 void traj_pub(){
   double current_time = ros::Time::now().toSec();
   Vec8 traj1_deque_front = trajectory1.front();
 
-  while (current_time - traj1_information[0] - traj1_deque_front[0] > 0){
+  while (current_time - traj1_deque_front[0] > 0){
     trajectory1.pop_front();
     traj1_deque_front = trajectory1.front();
     // cout << "ddt: " <<  current_time - traj1_information[0] - traj1_deque_front[0] << endl;
