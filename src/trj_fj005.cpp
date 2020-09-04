@@ -31,12 +31,11 @@ Vec3 uav_lp_p;
 Vec4 uav_lp_q;
 Vec8 Current_stage_mission;
 geometry_msgs::PoseStamped pose;
-
 // Initial trajectories
 deque<Vec8> trajectory1;
 Vec2 traj1_information;
-bool trajectory1_initflag = false;
-
+deque<Vec8> trajectory2;
+Vec2 traj2_information;
 // Initial waypoints
 deque<Vec8> waypoints;
 
@@ -195,7 +194,7 @@ void Finite_state_WP_mission(){
     }
     //Store the Trajectory information 
     //Trajectory staring time, Trajectory duration
-    traj1_information = Vec2(ros::Time::now().toSec(),traj1[0]-1);
+    traj1_information = Vec2(ros::Time::now().toSec(),traj1[0]-hovertime);
     
     // For Debug section plot the whole trajectory
     // int trajectorysize = trajectory1.size();
@@ -338,7 +337,7 @@ int main(int argc, char **argv)
     local_pos_pub.publish(pose);
     ros::spinOnce();
     rate.sleep();
-    /*Mission End here*****************************************************/
+    /*Mission End here*******************************************************/
     if (Mission_stage > waypoints.size()){
       cout << "------------------------------------------------------------------------------" << endl;
       cout << "------------------------------------------------------------------------------" << endl;
@@ -353,9 +352,9 @@ int main(int argc, char **argv)
       cout << "------------------------------------------------------------------------------" << endl;
       cout << "------------------------------------------------------------------------------" << endl;
     }
-    
+    /*Mission information cout***********************************************/
     int coutcounter;
-    if(coutcounter > 3){
+    if(coutcounter > 3){ //reduce cout rate
       cout << "------------------------------------------------------------------------------" << endl;
       cout << "Mission_Stage: " << Mission_stage << "    Mission_total_stage: " << waypoints.size() << endl;
       cout << "Mission_State: " << Mission_state << endl;
