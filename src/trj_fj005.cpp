@@ -195,7 +195,6 @@ void Finite_state_WP_mission(){
     //Store the Trajectory information 
     //Trajectory staring time, Trajectory duration
     traj1_information = Vec2(ros::Time::now().toSec(),traj1[0]-hovertime);
-    
     // For Debug section plot the whole trajectory
     // int trajectorysize = trajectory1.size();
     // for (int i = 0; i < trajectorysize; i++){
@@ -288,6 +287,9 @@ int main(int argc, char **argv)
     /*Update takeoff Position and Mission**********************************************/
     if(Initialfromtakeoffpos)
     {
+      /*Generate waypoits**************************************************************/
+      Mission_Generator();
+      /*Initialize takeoff*************************************************************/
       Quaterniond q(uav_lp_qw,uav_lp_qx,uav_lp_qy,uav_lp_qz);
       Vec3 rpy = Q2rpy(q);
       takeoff_x = uav_lp_x;
@@ -295,7 +297,6 @@ int main(int argc, char **argv)
       takeoff_z = uav_lp_z;
       takeoff_yaw = rpy[2];
       Initialfromtakeoffpos = false;
-
       cout << "====================================================" <<endl;
       cout << "====================================================" <<endl;
       cout << "Mission Params Initialized" << endl;
@@ -303,7 +304,6 @@ int main(int argc, char **argv)
       cout << "takeoff_y: " << takeoff_y << endl;
       cout << "takeoff_z: " << takeoff_z << endl;
       cout << "takeoff_yaw: " << takeoff_yaw << endl;
-      Mission_Generator();
       cout << "Mission updated    Mission stage count: " << waypoints.size() << endl;
       cout << "====================================================" <<endl;
       cout << "====================================================" <<endl;
