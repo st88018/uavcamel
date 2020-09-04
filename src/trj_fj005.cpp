@@ -22,7 +22,6 @@ double takeoff_x,takeoff_y,takeoff_z,takeoff_yaw;
 int    Mission_state = 0;
 int    Mission_stage = 0;
 int    Current_Mission_stage = 0;
-int    Mission_stage_count = 0;
 bool   Initialfromtakeoffpos;
 double Trajectory_timestep = 0.02; // in Seconds
 double uav_lp_x,uav_lp_y,uav_lp_z;
@@ -113,6 +112,7 @@ void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad
 }
 
 // For minimun jerk trajectory
+
 // void arrangeT(deque ts, deque waypts, double T){
 
 // }
@@ -308,8 +308,7 @@ int main(int argc, char **argv)
       cout << "takeoff_z: " << takeoff_z << endl;
       cout << "takeoff_yaw: " << takeoff_yaw << endl;
       Mission_Generator();
-      Mission_stage_count = waypoints.size();
-      cout << "Mission updated    Mission stage count: " << Mission_stage_count << endl;
+      cout << "Mission updated    Mission stage count: " << waypoints.size() << endl;
       cout << "====================================================" <<endl;
       cout << "====================================================" <<endl;
     }
@@ -342,16 +341,31 @@ int main(int argc, char **argv)
     local_pos_pub.publish(pose);
     ros::spinOnce();
     rate.sleep();
+    /*Mission End here*****************************************************/
+    if (Mission_stage > waypoints.size()){
+      cout << "------------------------------------------------------------------------------" << endl;
+      cout << "------------------------------------------------------------------------------" << endl;
+      cout << "------------------------------------------------------------------------------" << endl;
+      cout << "Mission End    Shutting Down system" << endl;
+      cout << " " << endl;
+      cout << "ThankU for using UAV camel" << endl;
+      cout << "First Version written in Sep 2020" << endl;
+      cout << "PolyU GH034" << endl;
+      cout << "------------------------------------------------------------------------------" << endl;
+      cout << "------------------------------------------------------------------------------" << endl;
+      cout << "------------------------------------------------------------------------------" << endl;
+      cout << "------------------------------------------------------------------------------" << endl;
+    }
     
     int coutcounter;
     if(coutcounter > 20){
       cout << "------------------------------------------------------------------------------" << endl;
-      cout << "Mission_Stage: " << Mission_stage << "    Mission_State: " << Mission_state <<endl;
+      cout << "Mission_Stage: " << Mission_stage << "    Mission_total_stage: " << waypoints.size() << "    Mission_State: " << Mission_state << endl;
       cout << "currentpos_x: " << uav_lp_x << " y: " << uav_lp_y << " z: "<< uav_lp_z << endl;
       cout << "desiredpos_x: " << pose.pose.position.x << " y: " << pose.pose.position.y << " z: "<< pose.pose.position.z << endl;
       cout << "ROS_time: " << ros::Time::now() << endl;
       cout << "Trajectory_init_time: " << traj1_information[0] << endl;
-      cout << "Trajectory duration: " << traj1_information[1] <<endl; 
+      cout << "Trajectory_end_time: " << traj1_information[1] <<endl; 
       cout << "Current_trajectory_size: " << trajectory1.size() << endl;
       cout << "------------------------------------------------------------------------------" << endl;
       coutcounter = 0;
