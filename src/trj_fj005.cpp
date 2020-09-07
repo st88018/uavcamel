@@ -38,6 +38,10 @@ deque<Vec8> trajectory2;
 Vec2 traj2_information;
 // Initial waypoints
 deque<Vec8> waypoints;
+// Minimun jerk Traj
+deque<Vec8> MJwaypoints;
+deque<double> ts;
+
 
 void Mission_Generator(){
   // Waypoints
@@ -54,7 +58,7 @@ void Mission_Generator(){
   waypoints.push_back(wp);
   wp << 4, 0, 0, 5, 0,  1, 1, 1 ;  // state = 4; constant velocity RTL but with altitude.
   waypoints.push_back(wp);
-  wp << 5, 0, 0, 0, 0,  1, 1, 10;    // state = 5; land.
+  wp << 5, 0, 0, 0, 0,  1, 1, 10;  // state = 5; land.
   waypoints.push_back(wp);
 }
 
@@ -112,9 +116,19 @@ void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad
 
 // For minimun jerk trajectory
 
-// void arrangeT(deque ts, deque waypts, double T){
+void MinJerkTraj(deque MJwaypoints, double velocity){
+// Arrange time according to every wpts using their distance and the total velocity.
+int wpcounts = MJwaypoints.size();
+for (int i = 0; i < wpcounts; i++){
+  /* code */
+}
 
-// }
+
+double V0[3] = {0,0,0};
+double A0[3] = {0,0,0};
+double V1[3] = {0,0,0};
+double A1[3] = {0,0,0};
+}
 
 // void calc_tvec(deque tvec, int t, int n_oder, int r){
 
