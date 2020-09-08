@@ -167,31 +167,75 @@ MatrixXd computeQ (int n, int r, double t1, double t2){
   return Q;
 }
 
-MatrixXd blkdiag(MatrixXd Q_all, MatrixXd Q){
+MatrixXd blkdiag(MatrixXd Q_all, MatrixXd Q, int count){ // For MinJerkPoly
+  int Q_c = Q.cols();
+  int Q_r = Q.rows();
+  for (int i=0; i<Q_c;i++){
+    for (int j=0; j<Q_r;j++){
+      Q_all(i+count*Q_c,j+count*Q_r) = Q(i,j);
+    }
+  }
+  return Q_all;
+}
 
+MatrixXd calc_tvec(double t, int n_order, int r){ // For MinJerkPoly
+  MatrixXd tvec = MatrixXd::Zero(1,n_order+1);
+  for(int i=r+1; i<n_order+2; i++){
+    MatrixXd ar = MatrixXd::Zero(r,1);
+    for (int ari=0;ari<r;ari++){
+        ar(ari) = i-r+ari;
+    }
+    tvec(i-1) = prod(ar)*pow(t,(i-r-1));
+  }
+  return tvec;
 }
 
 void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae){
-  deque<doubele> waypoints;
+  deque<double> waypoints;
   for(int i=0; i<MJwaypoints.size();i++){
     Vec4 MJwaypoint = MJwaypoints.at(i);
-    waypoints.push_back(MJwaypoints(xyzyaw));
+    waypoints.push_back(MJwaypoint(xyzyaw));
   }
-  double p0 = waypts.front();
-  double pe = waypts.back();
-  int n_poly = waypts.size()-1;
+  double p0 = waypoints.front();
+  double pe = waypoints.back();
+  int n_poly = waypoints.size()-1;
   int n_coef = n_order+1;
   //Compute Q
-  MatrixXd Q_all = MatrixXd::Zero(1,1);
+  MatrixXd Q_all = MatrixXd::Zero((n_order+1)*n_poly,(n_order+1)*n_poly);
   for (int i=0; i<n_poly;i++){
-    Q_all = blkdiag(Q_all,computeQ(n_order,3,ts.at(i),ts.at(i+1)));
+    Q_all = blkdiag(Q_all,computeQ(n_order,3,ts.at(i),ts.at(i+1)),i);
   }
-  //   cout << " " <<endl;
-  //   cout << " " <<endl;
-  //   cout << "Q:  " <<endl;
-  //   cout << Q <<endl;
-  //   cout << " " <<endl;
-  //   cout << " " <<endl;
+  MatrixXd b_all = MatrixXd::Zero((n_order+1)*n_poly,1);
+  MatrixXd Aeq = MatrixXd::Zero(4*n_poly+2,n_coef*n_poly);
+  MatrixXd beq = MatrixXd::Zero(4*n_poly+2,1);
+  // Start/terminal pva constraints  (6 equations)
+  for (int i=0;i<n_coef; i++){
+    MatrixXd tvec;
+    tvec = calc_tvec(ts.front(),n_order,0);
+    Aeq(0,i) = tvec(i);
+    tvec = calc_tvec(ts.front(),n_order,1);
+    Aeq(1,i) = tvec(i);
+    tvec = calc_tvec(ts.front(),n_order,2);
+    Aeq(2,i) = tvec(i);
+  }
+  for (int i= n_coef*(n_poly-1); i<n_coef*n_poly; i++){
+    int j = i-n_coef*(n_poly-1);
+    MatrixXd tvec;
+    tvec = calc_tvec(ts.back(),n_order,0);
+    Aeq(3,i) = tvec(j);
+    tvec = calc_tvec(ts.back(),n_order,1);
+    Aeq(4,i) = tvec(j);
+    tvec = calc_tvec(ts.back(),n_order,2);
+    Aeq(5,i) = tvec(j);
+  }
+  // 
+
+    cout << " " <<endl;
+    cout << " " <<endl;
+    cout << "Q:  " <<endl;
+    cout << Aeq <<endl;
+    cout << " " <<endl;
+    cout << " " <<endl;
 }
 
 void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
@@ -229,7 +273,7 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
     double tss = ts.back()+dist.at(i)*k;
     ts.push_back(tss);
   }
-  // MinJerkPoly(MJwaypoints,1,ts,n_order,V0[1],A0[1],V1[1],A1[1]);
+  MinJerkPoly(MJwaypoints,1,ts,n_order,V0[1],A0[1],V1[1],A1[1]);
 
   cout << "------------------------------------------------------------------------------" << endl;
   cout << "------------------------------------------------------------------------------" << endl;
