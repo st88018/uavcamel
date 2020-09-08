@@ -118,7 +118,6 @@ void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad
 }
 
 // For minimun jerk trajectory
-
 void MJwp_Generator(){
   MJwaypoints.clear();
   Vec4 wp; // state x y z yaw v av waittime
@@ -233,6 +232,7 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
 
 }
 
+// For Trajectory publish
 void traj_pub(){
   double current_time = ros::Time::now().toSec();
   Vec8 traj1_deque_front = trajectory1.front();
@@ -254,7 +254,7 @@ void traj_pub(){
   // Trajectory current time > duration than goes on to next stage
   if (traj1_deque_front[0] > traj1_information[1]){ Mission_stage++;}
 }
-
+// FSM
 void Finite_state_WP_mission(){
   
   // Generate trajectory while mission stage change
@@ -329,7 +329,7 @@ void uav_lp_cb(const geometry_msgs::PoseStamped::ConstPtr& pose){
   uav_lp_p = Vec3(uav_lp_x,uav_lp_y,uav_lp_z);
   uav_lp_q = Vec4(uav_lp_qw,uav_lp_qx,uav_lp_qy,uav_lp_qz);
 }
-
+// Main
 int main(int argc, char **argv){
   ros::init(argc, argv, "offboard_node");
   ros::NodeHandle nh("~");
