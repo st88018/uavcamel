@@ -17,6 +17,10 @@
 #define PI (3.1415926)
 using namespace std;
 
+#include <iostream>
+#include <Eigen/Dense>
+using Eigen::MatrixXd;
+
 mavros_msgs::State current_state;
 double takeoff_x,takeoff_y,takeoff_z,takeoff_yaw;
 int    Mission_state = 0;
@@ -39,9 +43,8 @@ Vec2 traj2_information;
 // Initial waypoints
 deque<Vec8> waypoints;
 // Minimun jerk Traj
-deque<Vec8> MJwaypoints;
+deque<Vec4> MJwaypoints;
 deque<double> ts;
-
 
 void Mission_Generator(){
   // Waypoints
@@ -116,25 +119,121 @@ void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad
 
 // For minimun jerk trajectory
 
-void MinJerkTraj(deque MJwaypoints, double velocity){
-// Arrange time according to every wpts using their distance and the total velocity.
-int wpcounts = MJwaypoints.size();
-for (int i = 0; i < wpcounts; i++){
-  /* code */
+void MJwp_Generator(){
+  MJwaypoints.clear();
+  Vec4 wp; // state x y z yaw v av waittime
+  wp << 0, 0, 1, 0;
+  MJwaypoints.push_back(wp);
+  wp << 1, 0, 1, 0.1;
+  MJwaypoints.push_back(wp);
+  wp << 1, 1, 1, 0;
+  MJwaypoints.push_back(wp);
+  wp << 0, 1, 1, 0.2;
+  MJwaypoints.push_back(wp);
+  wp << 0, 0, 1, 0;
+  MJwaypoints.push_back(wp);
 }
 
+int prod(MatrixXd ar){
+  int result = 1;
+  int n = ar.size();
+  for (int i=0; i<n; i++){
+    result = result*ar(i);
+  }
+  return result;
+}
 
-double V0[3] = {0,0,0};
-double A0[3] = {0,0,0};
-double V1[3] = {0,0,0};
-double A1[3] = {0,0,0};
+void computeQ (int n, int r, double t1, double t2){
+  int nr = (n-r)*2+1;
+  MatrixXd T = MatrixXd::Zero(nr,1);
+  MatrixXd Q = MatrixXd::Zero(n+1,n+1);
+  for (int i=1;i<nr+1;i++){
+    T(i-1) = pow(t2,i)-pow(t1,i);
+  }
+  for (int i=r+1; i<n+2; i++){
+    for (int j=i; j<n+2; j++){
+      int k1 = i-r-1;
+      int k2 = j-r-1;
+      int k = k1+k2+1;
+      MatrixXd ar = MatrixXd::Zero(r,1);
+      MatrixXd ar2 = MatrixXd::Zero(r,1);
+      for (int ari=0;ari<r;ari++){
+        ar(ari) = k1+1+ari;
+        ar2(ari) = k2+1+ari;
+      }
+      Q(i-1,j-1) = prod(ar)*prod(ar2)/k*T(k-1);
+      Q(j-1,i-1) = Q(i-1,j-1);
+    }
+  }
+//   cout << " " <<endl;
+//   cout << " " <<endl;
+//   cout << "Q:  " <<endl;
+//   cout << Q <<endl;
+//   cout << " " <<endl;
+//   cout << " " <<endl;
+}
+
+void MinJerkPoly(deque<double> waypts, deque<double> ts, int n_order,double v0, double a0, double ae, double ve){
+  double p0 = waypts.front();
+  double pe = waypts.back();
+  int n_poly = waypts.size()-1;
+  int n_coef = n_order+1;
+  //Compute Q
+  MatrixXd Q_all;
+
+
+}
+
+void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
+  computeQ(5,3,1,2);
+  cout << "------------------------------------------------------------------------------" << endl;
+  cout << "------------------------------------------------------------------------------" << endl;
+  cout << " MinJerk Triggered " << endl;
+  double V0[4] = {0,0,0,0};
+  double A0[4] = {0,0,0,0};
+  double V1[4] = {0,0,0,0};
+  double A1[4] = {0,0,0,0};
+  int wpcounts = MJwaypoints.size();
+  double totaldist = 0;
+  double totalyawrad = 0;
+ // Arrange time according to every wpts using their distance and the total velocity.
+  deque<double> dist; //Distance between each waypoints
+  deque<double> yaws; //Yaw changes between each waypoints
+  deque<double> ts;   //Time cost between each waypoints
+  dist.clear();
+  for (int i = 0; i < wpcounts-1; i++){
+    Vec4 wpA = MJwaypoints.at(i);
+    Vec4 wpB = MJwaypoints.at(i+1);
+    double d = sqrt(pow((wpA[0]-wpB[0]),2)+pow((wpA[1]-wpB[1]),2)+pow((wpA[2]-wpB[2]),2)); // distance between two wpts
+    dist.push_back(d);
+    totaldist += d;
+    double y = abs(wpA[3]-wpB[3]);
+    yaws.push_back(y);
+    totalyawrad += y;
+  }
+ 
+  double totaltime = totaldist/velocity;
+  double k = totaltime/totaldist;
+  ts.clear();
+  ts.push_back(0);
+  for (int i=0;i<dist.size();i++){
+    double tss = ts.back()+dist.at(i)*k;
+    ts.push_back(tss);
+  }
+
+
+  cout << "------------------------------------------------------------------------------" << endl;
+  cout << "------------------------------------------------------------------------------" << endl;
+  cout << "Minimun Jerk Traj Waypoint counts: " << wpcounts <<endl;
+  cout << "Total dist: " << totaldist << endl;
+  cout << "Total Yaw: " << totalyawrad << endl;
+  // cout << "TS count: " << ts.at(3) << endl;
+  cout << "------------------------------------------------------------------------------" << endl;
+  cout << "------------------------------------------------------------------------------" << endl;
+
 }
 
 // void calc_tvec(deque tvec, int t, int n_oder, int r){
-
-// }
-
-// void computeQ (deque Q, int n, int r, double t1, double t2){
 
 // }
 
@@ -339,7 +438,9 @@ int main(int argc, char **argv){
         }
       }
     /*Mission start here*****************************************************/
-    Finite_state_WP_mission();
+    MJwp_Generator();
+    MinJerkTraj(MJwaypoints, 1);
+    // Finite_state_WP_mission();
     local_pos_pub.publish(pose);
     ros::spinOnce();
     rate.sleep();
