@@ -142,7 +142,7 @@ int prod(MatrixXd ar){  //For computeQ use
   return result;
 }
 
-void computeQ (int n, int r, double t1, double t2){
+MatrixXd computeQ (int n, int r, double t1, double t2){
   int nr = (n-r)*2+1;
   MatrixXd T = MatrixXd::Zero(nr,1);
   MatrixXd Q = MatrixXd::Zero(n+1,n+1);
@@ -164,27 +164,37 @@ void computeQ (int n, int r, double t1, double t2){
       Q(j-1,i-1) = Q(i-1,j-1);
     }
   }
-//   cout << " " <<endl;
-//   cout << " " <<endl;
-//   cout << "Q:  " <<endl;
-//   cout << Q <<endl;
-//   cout << " " <<endl;
-//   cout << " " <<endl;
+  return Q;
 }
 
-void MinJerkPoly(deque<double> waypts, deque<double> ts, int n_order,double v0, double a0, double ae, double ve){
+MatrixXd blkdiag(MatrixXd Q_all, MatrixXd Q){
+
+}
+
+void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae){
+  deque<doubele> waypoints;
+  for(int i=0; i<MJwaypoints.size();i++){
+    Vec4 MJwaypoint = MJwaypoints.at(i);
+    waypoints.push_back(MJwaypoints(xyzyaw));
+  }
   double p0 = waypts.front();
   double pe = waypts.back();
   int n_poly = waypts.size()-1;
   int n_coef = n_order+1;
   //Compute Q
-  MatrixXd Q_all;
-
-
+  MatrixXd Q_all = MatrixXd::Zero(1,1);
+  for (int i=0; i<n_poly;i++){
+    Q_all = blkdiag(Q_all,computeQ(n_order,3,ts.at(i),ts.at(i+1)));
+  }
+  //   cout << " " <<endl;
+  //   cout << " " <<endl;
+  //   cout << "Q:  " <<endl;
+  //   cout << Q <<endl;
+  //   cout << " " <<endl;
+  //   cout << " " <<endl;
 }
 
 void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
-  computeQ(5,3,1,2);
   cout << "------------------------------------------------------------------------------" << endl;
   cout << "------------------------------------------------------------------------------" << endl;
   cout << " MinJerk Triggered " << endl;
@@ -195,12 +205,13 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
   int wpcounts = MJwaypoints.size();
   double totaldist = 0;
   double totalyawrad = 0;
+  int n_order = 5;
  // Arrange time according to every wpts using their distance and the total velocity.
   deque<double> dist; //Distance between each waypoints
   deque<double> yaws; //Yaw changes between each waypoints
   deque<double> ts;   //Time cost between each waypoints
   dist.clear();
-  for (int i = 0; i < wpcounts-1; i++){
+  for (int i = 0; i < wpcounts-1; i++){ //Calculating the total distance and yaw changes
     Vec4 wpA = MJwaypoints.at(i);
     Vec4 wpB = MJwaypoints.at(i+1);
     double d = sqrt(pow((wpA[0]-wpB[0]),2)+pow((wpA[1]-wpB[1]),2)+pow((wpA[2]-wpB[2]),2)); // distance between two wpts
@@ -210,7 +221,6 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
     yaws.push_back(y);
     totalyawrad += y;
   }
- 
   double totaltime = totaldist/velocity;
   double k = totaltime/totaldist;
   ts.clear();
@@ -219,7 +229,7 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
     double tss = ts.back()+dist.at(i)*k;
     ts.push_back(tss);
   }
-
+  // MinJerkPoly(MJwaypoints,1,ts,n_order,V0[1],A0[1],V1[1],A1[1]);
 
   cout << "------------------------------------------------------------------------------" << endl;
   cout << "------------------------------------------------------------------------------" << endl;
