@@ -134,7 +134,7 @@ void MJwp_Generator(){
   MJwaypoints.push_back(wp);
 }
 
-int prod(MatrixXd ar){
+int prod(MatrixXd ar){  //For computeQ use
   int result = 1;
   int n = ar.size();
   for (int i=0; i<n; i++){
@@ -232,10 +232,6 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
   cout << "------------------------------------------------------------------------------" << endl;
 
 }
-
-// void calc_tvec(deque tvec, int t, int n_oder, int r){
-
-// }
 
 void traj_pub(){
   double current_time = ros::Time::now().toSec();
