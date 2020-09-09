@@ -228,14 +228,28 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     tvec = calc_tvec(ts.back(),n_order,2);
     Aeq(5,i) = tvec(j);
   }
-  // 
-
-    cout << " " <<endl;
-    cout << " " <<endl;
-    cout << "Q:  " <<endl;
-    cout << Aeq <<endl;
-    cout << " " <<endl;
-    cout << " " <<endl;
+  beq(0,0) = p0;
+  beq(1,0) = v0;
+  beq(2,0) = a0;
+  beq(3,0) = pe;
+  beq(4,0) = ve;
+  beq(5,0) = ae;
+  int neq = 6;
+  for(int i=1; i<n_poly;i++){
+    neq++;
+    MatrixXd tvec = calc_tvec(ts.at(i),n_order,0);
+    for (int j=n_coef*i+1; j<n_coef*(i+1)+1;j++){
+      int k = j-n_coef*i-1;
+      Aeq(neq-1,j-1) = tvec(k);
+    }
+    beq(neq-1) = waypoints.at(i+1);
+  }
+  cout << " " <<endl;
+  cout << " " <<endl;
+  cout << "Q:  " <<endl;
+  cout << Aeq <<endl;
+  cout << " " <<endl;
+  cout << " " <<endl;  
 }
 
 void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
