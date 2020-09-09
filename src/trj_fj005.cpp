@@ -238,11 +238,46 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
   for(int i=1; i<n_poly;i++){
     neq++;
     MatrixXd tvec = calc_tvec(ts.at(i),n_order,0);
-    for (int j=n_coef*i+1; j<n_coef*(i+1)+1;j++){
+    for(int j=n_coef*i+1; j<n_coef*(i+1)+1;j++){
       int k = j-n_coef*i-1;
       Aeq(neq-1,j-1) = tvec(k);
     }
     beq(neq-1) = waypoints.at(i+1);
+  }
+  for(int i=1; i<n_poly; i++){
+    MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
+    MatrixXd tvec_v = calc_tvec(ts.at(i),n_order,1);
+    MatrixXd tvec_a = calc_tvec(ts.at(i),n_order,2);
+    neq++;
+    int tvec_p_size = tvec_p.size();
+    for(int j=n_coef*(i-1)+1; j<n_coef*(i+1)+1; j++){
+      int k = j-n_coef*(i-1)-1;
+      if (k < tvec_p_size){
+        Aeq(neq-1,j-1) = tvec_p(k);
+      }else{
+        Aeq(neq-1,j-1) = - tvec_p(k-tvec_p_size);
+      }
+    }
+    neq++;
+    int tvec_v_size = tvec_v.size();
+    for(int j=n_coef*(i-1)+1; j<n_coef*(i+1)+1; j++){
+      int k = j-n_coef*(i-1)-1;
+      if (k < tvec_v_size){
+        Aeq(neq-1,j-1) = tvec_v(k);
+      }else{
+        Aeq(neq-1,j-1) = -tvec_v(k-tvec_p_size);
+      }
+    }
+    neq++;
+    int tvec_a_size = tvec_a.size();
+    for(int j=n_coef*(i-1)+1; j<n_coef*(i+1)+1; j++){
+      int k = j-n_coef*(i-1)-1;
+      if (k < tvec_a_size){
+        Aeq(neq-1,j-1) = tvec_a(k);
+      }else{
+        Aeq(neq-1,j-1) = -tvec_a(k-tvec_p_size);
+      }
+    }
   }
   cout << " " <<endl;
   cout << " " <<endl;
