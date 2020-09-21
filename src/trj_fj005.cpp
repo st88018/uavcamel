@@ -21,6 +21,10 @@ using namespace std;
 #include <Eigen/Dense>
 using Eigen::MatrixXd;
 
+#include <sstream>
+#include <string>
+#include "QuadProg++.hh"
+
 mavros_msgs::State current_state;
 double takeoff_x,takeoff_y,takeoff_z,takeoff_yaw;
 int    Mission_state = 0;
@@ -123,13 +127,13 @@ void MJwp_Generator(){
   Vec4 wp; // state x y z yaw v av waittime
   wp << 0, 0, 1, 0;
   MJwaypoints.push_back(wp);
-  wp << 1, 0, 1, 0.1;
+  wp << 1, 2, 1, 0.1;
   MJwaypoints.push_back(wp);
-  wp << 1, 1, 1, 0;
+  wp << 2, 0, 1, 0;
   MJwaypoints.push_back(wp);
-  wp << 0, 1, 1, 0.2;
+  wp << 4, 5, 1, 0;
   MJwaypoints.push_back(wp);
-  wp << 0, 0, 1, 0;
+  wp << 5, 2, 1, 0;
   MJwaypoints.push_back(wp);
 }
 
@@ -190,6 +194,50 @@ MatrixXd calc_tvec(double t, int n_order, int r){ // For MinJerkPoly
   return tvec;
 }
 
+quadprogpp::Matrix<double> convertEigen2matrix (MatrixXd matrix){
+  quadprogpp::Matrix<double> output;
+  int c = matrix.cols();
+  int r = matrix.rows();
+  output.resize(c,r);
+  for(int i=0; i<r;i++){
+    for (int j=0; j<c; j++){
+      output[i][j] = matrix(i,j);
+    }
+  }
+  return output;
+}
+
+quadprogpp::Vector<double> convertEigen2vector (MatrixXd matrix){
+  quadprogpp::Vector<double> output;
+  int c = matrix.cols();
+  int r = matrix.rows();
+  output.resize(r);
+  for(int i=0; i<r;i++){
+    output[i] = matrix(i);
+  }
+  return output;
+}
+
+quadprogpp::Matrix<double> Zeromatrix (quadprogpp::Matrix<double> matrix,int c,int r){
+  quadprogpp::Matrix<double> output;
+  output.resize(c,r);
+  for(int i=0; i<r;i++){
+    for (int j=0; j<c; j++){
+      output[i][j] = 0;
+    }
+  }
+  return output;
+}
+
+quadprogpp::Vector<double> Zerovector (quadprogpp::Vector<double> vector,int r){
+  quadprogpp::Vector<double> output;
+  output.resize(r);
+  for(int i=0; i<r;i++){
+    output[i] = 0;
+  }
+  return output;
+}
+
 void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae){
   deque<double> waypoints;
   for(int i=0; i<MJwaypoints.size();i++){
@@ -242,7 +290,7 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
       int k = j-n_coef*i-1;
       Aeq(neq-1,j-1) = tvec(k);
     }
-    beq(neq-1) = waypoints.at(i+1);
+    beq(neq-1) = -waypoints.at(i+1);
   }
   for(int i=1; i<n_poly; i++){
     MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
@@ -279,34 +327,81 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
       }
     }
   }
-  cout << " " <<endl;
-  cout << " " <<endl;
-  cout << "Q:  " <<endl;
-  cout << Aeq <<endl;
-  cout << " " <<endl;
-  cout << " " <<endl;  
+  Q_all = Q_all.transpose().lazyProduct(Q_all);
+  // quadprogpp::Matrix<double> Q_all2,Aeq2,Aieq2;
+  // quadprogpp::Vector<double> b_all2,beq2,x,bieq2;
+  // Aieq2.resize(24,1);
+  // Aieq2 = Zeromatrix(Aieq2,24,1);
+  // bieq2.resize(1);
+  // bieq2 = Zerovector(bieq2,1);
+  // x.resize(24);
+  // x = Zerovector(x,24);
+  // Q_all2 = convertEigen2matrix(Q_all);
+  // Aeq2 = convertEigen2matrix(Aeq);
+  // b_all2 = convertEigen2vector(b_all);
+  // beq2 = convertEigen2vector(beq);
+  // solve_quadprog(Q_all2, b_all2, Aeq2, beq2, Aieq2, bieq2, x);
+  // quadprog(Q_all,b_all,Aieq,bieq,Aeq,beq);
+
+  // cout << " " <<endl;
+  // cout << " " <<endl;
+  // cout << "Q:  " <<endl;
+  // cout << beq <<endl;
+  // cout << " " <<endl;
+  // cout << " " <<endl;
+  // cout << "Q:  " <<endl;
+  // cout << beq2 <<endl;
+  // cout << " " <<endl;
+  // cout << " " <<endl;  
 }
 
-void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
+void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajectory main
   cout << "------------------------------------------------------------------------------" << endl;
   cout << "------------------------------------------------------------------------------" << endl;
   cout << " MinJerk Triggered " << endl;
+  //              x,y,z,yaw   (xyz in meter yaw in rad)
   double V0[4] = {0,0,0,0};
   double A0[4] = {0,0,0,0};
   double V1[4] = {0,0,0,0};
   double A1[4] = {0,0,0,0};
-  int wpcounts = MJwaypoints.size();
   double totaldist = 0;
   double totalyawrad = 0;
   int n_order = 5;
- // Arrange time according to every wpts using their distance and the total velocity.
+  double CorridorSize;
+  deque<Vec4> extendedWPs;
+  extendedWPs.push_back(MJwaypoints.front());
+  double step =  0.2;// Meters
+  // Install newwaypoints between original waypoints
+  for (int i=2; i<MJwaypoints.size()+1; i++){
+    double x1,x2,y1,y2,z1,z2,yaw1,yaw2;
+    Vec4 wp1 = MJwaypoints.at(i-2);
+    Vec4 wp2 = MJwaypoints.at(i-1);
+    int n = (sqrt(pow((wp1[0]-wp2[0]),2)+pow((wp1[1]-wp2[1]),2)+pow((wp1[2]-wp2[2]),2)))/step + 2;
+    deque<double> X,Y,Z,Yaw;
+    double dx = (wp2[0]-wp1[0])/(n-1);
+    double dy = (wp2[1]-wp1[1])/(n-1);
+    double dz = (wp2[2]-wp1[2])/(n-1);
+    double dyaw = (wp2[3]-wp1[3])/(n-1);
+    for (int i=1; i<n; i++){
+      X.push_back(wp1[0]+i*dx);
+      Y.push_back(wp1[1]+i*dy);
+      Z.push_back(wp1[2]+i*dz);
+      Yaw.push_back(wp1[3]+i*dz);
+    }
+    for (int i=0; i<X.size();i++){
+      Vec4 XYZYAW = Vec4(X.at(i),Y.at(i),Z.at(i),Yaw.at(i));
+      extendedWPs.push_back(XYZYAW);
+    }
+  }
+  // Arrange time according to every wpts using their distance and the total velocity.
   deque<double> dist; //Distance between each waypoints
   deque<double> yaws; //Yaw changes between each waypoints
   deque<double> ts;   //Time cost between each waypoints
   dist.clear();
-  for (int i = 0; i < wpcounts-1; i++){ //Calculating the total distance and yaw changes
-    Vec4 wpA = MJwaypoints.at(i);
-    Vec4 wpB = MJwaypoints.at(i+1);
+  int wpcounts = extendedWPs.size();
+  for (int i = 0; i < wpcounts-1; i++){ //Calculating the total distance and yaw changes (ArrangeT)
+    Vec4 wpA = extendedWPs.at(i);
+    Vec4 wpB = extendedWPs.at(i+1);
     double d = sqrt(pow((wpA[0]-wpB[0]),2)+pow((wpA[1]-wpB[1]),2)+pow((wpA[2]-wpB[2]),2)); // distance between two wpts
     dist.push_back(d);
     totaldist += d;
@@ -332,7 +427,6 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){
   // cout << "TS count: " << ts.at(3) << endl;
   cout << "------------------------------------------------------------------------------" << endl;
   cout << "------------------------------------------------------------------------------" << endl;
-
 }
 
 // For Trajectory publish

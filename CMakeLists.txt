@@ -43,13 +43,25 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Sophus_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIR}
+    "${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/QuadProgpp/src"
     )
 
 ######################################################################
 add_executable(trj_fj005
     src/trj_fj005.cpp
+    
     )
 target_link_libraries(trj_fj005
+    ${catkin_LIBRARIES}
+    ${YAML_CPP_LIBRARIES}
+    ${Sophus_LIBRARIES}
+    )
+
+add_executable(main 
+                src/main.cpp
+                3rdPartLib/QuadProgpp/src/Array.cc
+                3rdPartLib/QuadProgpp/src/QuadProg++.cc)
+target_link_libraries(main
     ${catkin_LIBRARIES}
     ${YAML_CPP_LIBRARIES}
     ${Sophus_LIBRARIES}
