@@ -129,12 +129,12 @@ void MJwp_Generator(){
   MJwaypoints.push_back(wp);
   wp << 1, 2, 1, 0.1;
   MJwaypoints.push_back(wp);
-  wp << 2, 0, 1, 0;
-  MJwaypoints.push_back(wp);
-  wp << 4, 5, 1, 0;
-  MJwaypoints.push_back(wp);
-  wp << 5, 2, 1, 0;
-  MJwaypoints.push_back(wp);
+  // wp << 2, 0, 1, 0;
+  // MJwaypoints.push_back(wp);
+  // wp << 4, 5, 1, 0;
+  // MJwaypoints.push_back(wp);
+  // wp << 5, 2, 1, 0;
+  // MJwaypoints.push_back(wp);
 }
 
 int prod(MatrixXd ar){  //For computeQ use
@@ -238,7 +238,7 @@ quadprogpp::Vector<double> Zerovector (quadprogpp::Vector<double> vector,int r){
   return output;
 }
 
-void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae){
+void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae, double corridor_r){
   deque<double> waypoints;
   for(int i=0; i<MJwaypoints.size();i++){
     Vec4 MJwaypoint = MJwaypoints.at(i);
@@ -254,8 +254,8 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     Q_all = blkdiag(Q_all,computeQ(n_order,3,ts.at(i),ts.at(i+1)),i);
   }
   MatrixXd b_all = MatrixXd::Zero((n_order+1)*n_poly,1);
-  MatrixXd Aeq = MatrixXd::Zero(4*n_poly+2,n_coef*n_poly);
-  MatrixXd beq = MatrixXd::Zero(4*n_poly+2,1);
+  MatrixXd Aeq = MatrixXd::Zero(3*n_poly+3,n_coef*n_poly);
+  MatrixXd beq = MatrixXd::Zero(3*n_poly+3,1);
   // Start/terminal pva constraints  (6 equations)
   for (int i=0;i<n_coef; i++){
     MatrixXd tvec;
@@ -283,15 +283,8 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
   beq(4,0) = ve;
   beq(5,0) = ae;
   int neq = 6;
-  for(int i=1; i<n_poly;i++){
-    neq++;
-    MatrixXd tvec = calc_tvec(ts.at(i),n_order,0);
-    for(int j=n_coef*i+1; j<n_coef*(i+1)+1;j++){
-      int k = j-n_coef*i-1;
-      Aeq(neq-1,j-1) = tvec(k);
-    }
-    beq(neq-1) = -waypoints.at(i+1);
-  }
+
+  /* continuous constraints  ((n_poly-1)*3 equations) */
   for(int i=1; i<n_poly; i++){
     MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
     MatrixXd tvec_v = calc_tvec(ts.at(i),n_order,1);
@@ -327,7 +320,22 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
       }
     }
   }
-  Q_all = Q_all.transpose().lazyProduct(Q_all);
+  // corridor constraints (n_ploy-1 iequations)
+  MatrixXd Aieq = MatrixXd::Zero(2*(n_poly-1),n_coef*n_poly);
+  MatrixXd bieq = MatrixXd::Zero(2*(n_poly-1),1);
+  for (int i=1; i<n_poly; i++){
+    MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
+    // for(int j=n_coef*i+1; j<n_coef*(i+1)+1; j++){
+    //   int k = j-n_coef*(i-1)-1;
+    //   Aieq(2*i-2,j-1) = tvec_p(k);
+    //   Aieq(2*i-1,j-1) = -tvec_p(k);
+    // }
+    bieq(2*i-2,0) = waypoints.at(i) + corridor_r;
+    bieq(2*i-1,0) = corridor_r - waypoints.at(i);
+  }
+
+
+  // Q_all = Q_all.transpose().lazyProduct(Q_all);
   // quadprogpp::Matrix<double> Q_all2,Aeq2,Aieq2;
   // quadprogpp::Vector<double> b_all2,beq2,x,bieq2;
   // Aieq2.resize(24,1);
@@ -343,16 +351,16 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
   // solve_quadprog(Q_all2, b_all2, Aeq2, beq2, Aieq2, bieq2, x);
   // quadprog(Q_all,b_all,Aieq,bieq,Aeq,beq);
 
-  // cout << " " <<endl;
-  // cout << " " <<endl;
-  // cout << "Q:  " <<endl;
-  // cout << beq <<endl;
-  // cout << " " <<endl;
-  // cout << " " <<endl;
-  // cout << "Q:  " <<endl;
-  // cout << beq2 <<endl;
-  // cout << " " <<endl;
-  // cout << " " <<endl;  
+  cout << " " <<endl;
+  cout << " " <<endl;
+  cout << "Q:  " <<endl;
+  cout << Aieq <<endl;
+  cout << " " <<endl;
+  cout << " " <<endl;
+  cout << "Q:  " <<endl;
+  cout << bieq <<endl;
+  cout << " " <<endl;
+  cout << " " <<endl;  
 }
 
 void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajectory main
@@ -417,7 +425,8 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
     double tss = ts.back()+dist.at(i)*k;
     ts.push_back(tss);
   }
-  MinJerkPoly(MJwaypoints,1,ts,n_order,V0[1],A0[1],V1[1],A1[1]);
+  cout << "ts: "<< ts.size() <<endl;
+  MinJerkPoly(extendedWPs,0,ts,n_order,V0[1],A0[1],V1[1],A1[1],step); //Second intut x=0;
 
   cout << "------------------------------------------------------------------------------" << endl;
   cout << "------------------------------------------------------------------------------" << endl;
