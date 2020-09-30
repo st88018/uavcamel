@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/jeremy/camel_ws/src/uavcamel/3rdPartLib/QuadProgpp/src/Array.hh
+set
+-
+stdexcept
+-
+iostream
+-
+iomanip
+-
+cmath
+-
+cstdlib
+-
+stdexcept
+-
+
+/home/jeremy/camel_ws/src/uavcamel/3rdPartLib/QuadProgpp/src/QuadProg++.hh
+Array.hh
+/home/jeremy/camel_ws/src/uavcamel/3rdPartLib/QuadProgpp/src/Array.hh
+
+/home/jeremy/camel_ws/src/uavcamel/3rdPartLib/QuadProgpp/src/main.cc
+iostream
+-
+sstream
+-
+string
+-
+QuadProg++.hh
+/home/jeremy/camel_ws/src/uavcamel/3rdPartLib/QuadProgpp/src/QuadProg++.hh
+

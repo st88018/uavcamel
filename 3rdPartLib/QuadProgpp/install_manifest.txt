@@ -1,0 +1,5 @@
+/usr/local/lib/libquadprog.a
+/usr/local/include/QuadProg++/Array.hh
+/usr/local/include/QuadProg++/QuadProg++.hh
+/usr/local/cmake/quadprog-targets.cmake
+/usr/local/cmake/quadprog-targets-noconfig.cmake
