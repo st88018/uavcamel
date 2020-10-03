@@ -13,3 +13,10 @@ cd build
 cmake ..
 make -j4
 sudo make install
+
+cd ../..
+
+cd QuadProgpp
+cmake -D CMAKE_INSTALL_PREFIX=/home/yourname/local/quad .
+make
+sudo make install
