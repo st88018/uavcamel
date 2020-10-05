@@ -24,6 +24,8 @@ using Eigen::MatrixXd;
 #include <sstream>
 #include <string>
 #include "QuadProg++.hh"
+#include "Array.hh"
+
 
 mavros_msgs::State current_state;
 double takeoff_x,takeoff_y,takeoff_z,takeoff_yaw;
@@ -351,7 +353,6 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
   // beq2 = convertEigen2vector(beq);
   // bieq2 = convertEigen2vector(bieq);
   solve_quadprog(Q_all2, b_all2, Aeq2, beq2, Aieq2, bieq2, x);
-
   // quadprog(Q_all,b_all,Aieq,bieq,Aeq,beq);
 
   // cout << " " <<endl;
