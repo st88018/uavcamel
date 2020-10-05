@@ -127,7 +127,7 @@ void MJwp_Generator(){
   Vec4 wp; // state x y z yaw v av waittime
   wp << 0, 0, 1, 0;
   MJwaypoints.push_back(wp);
-  wp << 1, 2, 1, 0.1;
+  wp << 1, 2, 1, 0;
   MJwaypoints.push_back(wp);
   // wp << 2, 0, 1, 0;
   // MJwaypoints.push_back(wp);
@@ -325,42 +325,45 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
   MatrixXd bieq = MatrixXd::Zero(2*(n_poly-1),1);
   for (int i=1; i<n_poly; i++){
     MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
-    // for(int j=n_coef*i+1; j<n_coef*(i+1)+1; j++){
-    //   int k = j-n_coef*(i-1)-1;
-    //   Aieq(2*i-2,j-1) = tvec_p(k);
-    //   Aieq(2*i-1,j-1) = -tvec_p(k);
-    // }
+    // cout << "tvec_p: " << tvec_p <<endl;
+    int k = 0;
+    for(int j=n_coef*i+1; j<n_coef*(i+1)+1; j++){
+      Aieq(2*i-2,j-1) = tvec_p(k);
+      Aieq(2*i-1,j-1) = -tvec_p(k);
+      k++;
+    }
     bieq(2*i-2,0) = waypoints.at(i) + corridor_r;
     bieq(2*i-1,0) = corridor_r - waypoints.at(i);
   }
 
-
-  // Q_all = Q_all.transpose().lazyProduct(Q_all);
-  // quadprogpp::Matrix<double> Q_all2,Aeq2,Aieq2;
-  // quadprogpp::Vector<double> b_all2,beq2,x,bieq2;
+  quadprogpp::Matrix<double> Q_all2,Aeq2,Aieq2;
+  quadprogpp::Vector<double> b_all2,beq2,x,bieq2;
   // Aieq2.resize(24,1);
   // Aieq2 = Zeromatrix(Aieq2,24,1);
   // bieq2.resize(1);
   // bieq2 = Zerovector(bieq2,1);
-  // x.resize(24);
-  // x = Zerovector(x,24);
+  // x.resize(72);
+  // x = Zerovector(x,72);
   // Q_all2 = convertEigen2matrix(Q_all);
+  // Aieq2 = convertEigen2matrix(Aieq);
   // Aeq2 = convertEigen2matrix(Aeq);
   // b_all2 = convertEigen2vector(b_all);
   // beq2 = convertEigen2vector(beq);
-  // solve_quadprog(Q_all2, b_all2, Aeq2, beq2, Aieq2, bieq2, x);
+  // bieq2 = convertEigen2vector(bieq);
+  solve_quadprog(Q_all2, b_all2, Aeq2, beq2, Aieq2, bieq2, x);
+
   // quadprog(Q_all,b_all,Aieq,bieq,Aeq,beq);
 
-  cout << " " <<endl;
-  cout << " " <<endl;
-  cout << "Q:  " <<endl;
-  cout << Aieq <<endl;
-  cout << " " <<endl;
-  cout << " " <<endl;
-  cout << "Q:  " <<endl;
-  cout << bieq <<endl;
-  cout << " " <<endl;
-  cout << " " <<endl;  
+  // cout << " " <<endl;
+  // cout << " " <<endl;
+  // cout << "Q:  " <<endl;
+  // cout << Aieq <<endl;
+  // cout << " " <<endl;
+  // cout << " " <<endl;
+  // cout << "Q:  " <<endl;
+  // cout << bieq <<endl;
+  // cout << " " <<endl;
+  // cout << " " <<endl;  
 }
 
 void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajectory main
@@ -425,7 +428,10 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
     double tss = ts.back()+dist.at(i)*k;
     ts.push_back(tss);
   }
-  cout << "ts: "<< ts.size() <<endl;
+  // ts cout
+  // for (int i = 0; i<ts.size(); i++){
+  //   cout << "ts: " << ts.at(i) <<endl;
+  // }
   MinJerkPoly(extendedWPs,0,ts,n_order,V0[1],A0[1],V1[1],A1[1],step); //Second intut x=0;
 
   cout << "------------------------------------------------------------------------------" << endl;
@@ -447,7 +453,7 @@ void traj_pub(){
     trajectory1.pop_front();
     traj1_deque_front = trajectory1.front();
   }
-   
+  
   pose.header.frame_id = "world";
   pose.pose.position.x = traj1_deque_front[1];
   pose.pose.position.y = traj1_deque_front[2];
