@@ -196,12 +196,41 @@ MatrixXd calc_tvec(double t, int n_order, int r){ // For MinJerkPoly
   return tvec;
 }
 
-quadprogpp::Matrix<double> convertEigen2matrix (MatrixXd matrix){
-  quadprogpp::Matrix<double> output;
+MatrixXd matrixnegative(MatrixXd matrix){
   int c = matrix.cols();
   int r = matrix.rows();
-  output.resize(c,r);
-  for(int i=0; i<r;i++){
+  MatrixXd output = MatrixXd::Zero(r,c);
+  for (int i=0; i<c; i++){
+    for (int j=0; j<r; j++){
+      if (matrix(j,i)!=0){
+        output(j,i) = matrix(j,i)*(-1);
+      }else{
+        output(j,i) = 0;
+      }
+    }
+  }
+  return output;
+}
+
+VectorXd vectornegative(VectorXd vector){
+  int s = vector.size();
+  VectorXd output(s);
+  for (int i=0; i<s; i++){
+    if (vector(i)!=0){
+      output(i) = vector[i]*-1;
+    }else{
+      output(i) = vector[i];
+    }
+  }
+  return output;
+}
+
+quadprogpp::Matrix<double> convertEigen2matrix (MatrixXd matrix){
+  quadprogpp::Matrix<double> output;
+  int r = matrix.rows();
+  int c = matrix.cols();
+  output.resize(r,c);
+  for(int i=0; i<r; i++){
     for (int j=0; j<c; j++){
       output[i][j] = matrix(i,j);
     }
@@ -209,13 +238,12 @@ quadprogpp::Matrix<double> convertEigen2matrix (MatrixXd matrix){
   return output;
 }
 
-quadprogpp::Vector<double> convertEigen2vector (MatrixXd matrix){
+quadprogpp::Vector<double> convertEigen2vector (VectorXd vector){
   quadprogpp::Vector<double> output;
-  int c = matrix.cols();
-  int r = matrix.rows();
-  output.resize(r);
-  for(int i=0; i<r;i++){
-    output[i] = matrix(i);
+  int s = vector.size();
+  output.resize(s);
+  for(int i=0; i<s;i++){
+    output[i] = vector(i);
   }
   return output;
 }
@@ -255,9 +283,9 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
   for (int i=0; i<n_poly;i++){
     Q_all = blkdiag(Q_all,computeQ(n_order,3,ts.at(i),ts.at(i+1)),i);
   }
-  MatrixXd b_all = MatrixXd::Zero((n_order+1)*n_poly,1);
+  VectorXd b_all = VectorXd::Zero((n_order+1)*n_poly);
   MatrixXd Aeq = MatrixXd::Zero(3*n_poly+3,n_coef*n_poly);
-  MatrixXd beq = MatrixXd::Zero(3*n_poly+3,1);
+  VectorXd beq = VectorXd::Zero(3*n_poly+3);
   // Start/terminal pva constraints  (6 equations)
   for (int i=0;i<n_coef; i++){
     MatrixXd tvec;
@@ -278,14 +306,13 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     tvec = calc_tvec(ts.back(),n_order,2);
     Aeq(5,i) = tvec(j);
   }
-  beq(0,0) = p0;
-  beq(1,0) = v0;
-  beq(2,0) = a0;
-  beq(3,0) = pe;
-  beq(4,0) = ve;
-  beq(5,0) = ae;
+  beq(0) = p0;
+  beq(1) = v0;
+  beq(2) = a0;
+  beq(3) = pe;
+  beq(4) = ve;
+  beq(5) = ae;
   int neq = 6;
-
   /* continuous constraints  ((n_poly-1)*3 equations) */
   for(int i=1; i<n_poly; i++){
     MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
@@ -324,47 +351,73 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
   }
   // corridor constraints (n_ploy-1 iequations)
   MatrixXd Aieq = MatrixXd::Zero(2*(n_poly-1),n_coef*n_poly);
-  MatrixXd bieq = MatrixXd::Zero(2*(n_poly-1),1);
+  VectorXd bieq = VectorXd::Zero(2*(n_poly-1));
   for (int i=1; i<n_poly; i++){
     MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
-    // cout << "tvec_p: " << tvec_p <<endl;
     int k = 0;
     for(int j=n_coef*i+1; j<n_coef*(i+1)+1; j++){
       Aieq(2*i-2,j-1) = tvec_p(k);
       Aieq(2*i-1,j-1) = -tvec_p(k);
       k++;
     }
-    bieq(2*i-2,0) = waypoints.at(i) + corridor_r;
-    bieq(2*i-1,0) = corridor_r - waypoints.at(i);
+    bieq(2*i-2) = waypoints.at(i) + corridor_r;
+    bieq(2*i-1) = corridor_r - waypoints.at(i);
   }
 
-  quadprogpp::Matrix<double> Q_all2,Aeq2,Aieq2;
-  quadprogpp::Vector<double> b_all2,beq2,x,bieq2;
-  // Aieq2.resize(24,1);
-  // Aieq2 = Zeromatrix(Aieq2,24,1);
-  // bieq2.resize(1);
-  // bieq2 = Zerovector(bieq2,1);
-  // x.resize(72);
-  // x = Zerovector(x,72);
-  // Q_all2 = convertEigen2matrix(Q_all);
-  // Aieq2 = convertEigen2matrix(Aieq);
-  // Aeq2 = convertEigen2matrix(Aeq);
-  // b_all2 = convertEigen2vector(b_all);
-  // beq2 = convertEigen2vector(beq);
-  // bieq2 = convertEigen2vector(bieq);
-  solve_quadprog(Q_all2, b_all2, Aeq2, beq2, Aieq2, bieq2, x);
-  // quadprog(Q_all,b_all,Aieq,bieq,Aeq,beq);
+  quadprogpp::Matrix<double> G, CE, CI;
+  quadprogpp::Vector<double> g0, ce0, ci0, x;
 
+
+  // // Aieq = matrixnegative(Aieq);
+  // // Aeq = matrixnegative(Aeq);
+  // x.resize(Q_all.rows());
+  // x = Zerovector(x,x.size());
+  // Q_all = matrixnegative(Q_all);
+  // G = convertEigen2matrix(Q_all);
+  // CI = convertEigen2matrix(Aieq.transpose());
+  // CE = convertEigen2matrix(Aeq.transpose());
+  // g0 = convertEigen2vector(b_all);
+  // // beq = vectornegative(beq);
+  // ce0 = convertEigen2vector(beq);
+  // // bieq = vectornegative(bieq);
+  // ci0 = convertEigen2vector(bieq);
+
+  int n, m, p;
+	MatrixXd G2(2,2); 
+  MatrixXd CE2(2,1);
+  MatrixXd CI2(2,3);
+  VectorXd g02(2);
+  VectorXd ce02(1);
+  VectorXd ci02(3);
+  G2 << 4, -2, -2, 4;
+  CE2 << 1, 1;
+  CI2 << 1, 0, 1, 0, 1, 1;
+  g02 << 6, 0;
+  ce02 << -3;
+  ci02 << 0, 0, -2;
+  G = convertEigen2matrix(G2);
+  CE = convertEigen2matrix(CE2);
+  CI = convertEigen2matrix(CI2);
+  g0 = convertEigen2vector(g02);
+  ce0 = convertEigen2vector(ce02);
+  ci0 = convertEigen2vector(ci02);
+  x.resize(2);
+  std::cout << "f: " << solve_quadprog(G, g0, CE, ce0, CI, ci0, x) << std::endl;
+	std::cout << "x: " << x << std::endl;
+
+  
   // cout << " " <<endl;
   // cout << " " <<endl;
-  // cout << "Q:  " <<endl;
-  // cout << Aieq <<endl;
+  // cout << "G:  " <<endl;
+  // cout << G <<endl;
   // cout << " " <<endl;
   // cout << " " <<endl;
-  // cout << "Q:  " <<endl;
-  // cout << bieq <<endl;
   // cout << " " <<endl;
-  // cout << " " <<endl;  
+  // cout << " " <<endl;
+  // cout << "Q_all2:  " <<endl;
+  // cout << Q_all2 <<endl;
+  // cout << " " <<endl;
+  // cout << " " <<endl;
 }
 
 void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajectory main
@@ -382,7 +435,7 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
   double CorridorSize;
   deque<Vec4> extendedWPs;
   extendedWPs.push_back(MJwaypoints.front());
-  double step =  0.2;// Meters
+  double step =  1;// Meters
   // Install newwaypoints between original waypoints
   for (int i=2; i<MJwaypoints.size()+1; i++){
     double x1,x2,y1,y2,z1,z2,yaw1,yaw2;
