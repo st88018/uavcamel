@@ -44,7 +44,11 @@ include_directories(
     ${Sophus_INCLUDE_DIRS}
     ${YAML_CPP_INCLUDE_DIR}
     "${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/QuadProgpp/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/OOQP/include"
     )
+
+link_directories("${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/OOQP/lib"
+                 "${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/MA27/src")
 
 ######################################################################
 add_executable(trj_fj005
@@ -65,4 +69,21 @@ target_link_libraries(main
     ${catkin_LIBRARIES}
     ${YAML_CPP_LIBRARIES}
     ${Sophus_LIBRARIES}
+    )
+
+add_executable(OOQP
+                src/OOQP.cpp
+                3rdPartLib/OOQP/lib
+                3rdPartLib/OOQP/include)
+target_link_libraries(OOQP
+    ${catkin_LIBRARIES}
+    ${YAML_CPP_LIBRARIES}
+    ${Sophus_LIBRARIES}
+    ooqpgensparse
+    ooqpsparse
+    ooqpgondzio
+    ooqpbase
+    blas
+    ma27
+    gfortran
     )

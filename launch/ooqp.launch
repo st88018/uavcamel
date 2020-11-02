@@ -1,0 +1,8 @@
+<launch>
+    <node pkg="uavcamel" type="OOQP" name="note_OOQP" output="screen">
+
+    </node>
+</launch>
+
+
+

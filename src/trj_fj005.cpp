@@ -26,6 +26,12 @@ using Eigen::MatrixXd;
 #include "QuadProg++.hh"
 #include "Array.hh"
 
+#include "QpGenData.h"
+#include "QpGenVars.h"
+#include "QpGenResiduals.h"
+#include "GondzioSolver.h"
+#include "QpGenSparseMa27.h"
+
 
 mavros_msgs::State current_state;
 double takeoff_x,takeoff_y,takeoff_z,takeoff_yaw;
