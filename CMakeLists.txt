@@ -53,12 +53,19 @@ link_directories("${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/OOQP/lib"
 ######################################################################
 add_executable(trj_fj005
     src/trj_fj005.cpp
-    3rdPartLib/QuadProgpp/src/Array.cc
-    3rdPartLib/QuadProgpp/src/QuadProg++.cc)
+    3rdPartLib/OOQP/lib
+    3rdPartLib/OOQP/include)
 target_link_libraries(trj_fj005
     ${catkin_LIBRARIES}
     ${YAML_CPP_LIBRARIES}
     ${Sophus_LIBRARIES}
+    ooqpgensparse
+    ooqpsparse
+    ooqpgondzio
+    ooqpbase
+    blas
+    ma27
+    gfortran
     )
 
 add_executable(main

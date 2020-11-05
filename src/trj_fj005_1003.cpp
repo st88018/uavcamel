@@ -251,21 +251,6 @@ deque<Vec3> MatrixQ2ooqpdeque(MatrixXd matrix){
   return output;
 }
 
-deque<Vec3> MatrixA2ooqpdeque(MatrixXd matrix, int row){
-  int matrixsize = matrix.size();
-  deque<Vec3> output;
-  Vec3 vector3;
-  for (int j = 0; j<matrixsize/row; j++){
-    for (int i = 0; i<row; i++){
-      // if(matrix(i,j)!=0){
-        vector3 = Vec3(i,j,matrix(i,j));
-        output.push_back(vector3);
-      // }
-    }
-  }
-  return output;
-}
-
 void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae, double corridor_r){
   deque<double> waypoints;
   for(int i=0; i<MJwaypoints.size();i++){
@@ -366,24 +351,12 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
   bool ooqp = 1;
   if (ooqp>0){  //use OOQP
     /* Q_all */
-    cout << " Q_all: " << endl;
-    cout << Q_all <<endl;
-    cout << " b_all: " << endl;
-    cout << b_all <<endl;
-    cout << " Aieq: " << endl;
-    cout << Aieq <<endl;
-    cout << " bieq: " << endl;
-    cout << bieq <<endl;
-    cout << " Aeq: " << endl;
-    cout << Aeq <<endl;
-    cout << " beq: " << endl;
-    cout << beq <<endl;
     int nnzQ = sqrt(Q_all.size());
     int irowQ[nnzQ], jcolQ[nnzQ];
     double dQ[nnzQ];
-    deque<Vec3> Q_all2d = MatrixQ2ooqpdeque(Q_all);
-    for (int i=0; i < Q_all2d.size(); i++){
-      Vec3 vectemp = Q_all2d.at(i);
+    deque<Vec3> M2d = MatrixQ2ooqpdeque(Q_all);
+    for (int i=0; i < M2d.size(); i++){
+      Vec3 vectemp = M2d.at(i);
       irowQ[i] = vectemp(0);
       jcolQ[i] = vectemp(1);
       dQ[i] = vectemp(2);
@@ -401,59 +374,54 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
       xlow[i]  = 0;
       ixlow[i] = 0;
     }
-    // /* bieq */
-    // int mz   = bieq.size();
-    // double clow[mz], cupp[mz];
-    // char  iclow[mz], icupp[mz];
-    // for (int i = 0; i<mz; i++){
-    //   clow[i]   = 0;
-    //   iclow[i]  = 0;
-    //   cupp[i]   = bieq[i];
-    //   icupp[i]  = 1;
-    //   // cout << " bieq: " <<  icupp[i] << " " << cupp[i] << endl;
-    // }
-    // /* Aieq */    
-    // deque<Vec3> Aieq2d = MatrixA2ooqpdeque(Aieq, mz);
-    // int nnzC = Aieq2d.size();
-    // int irowC[nnzC], jcolC[nnzC];
-    // double dC[nnzC];
-    // cout << " Aieq: " << nnzC << endl;
-    // for (int i = 0; i<nnzC; i++){
-    //   Vec3 vectemp = Aieq2d.at(i);
-    //   irowC[i] = vectemp(0);
-    //   jcolC[i] = vectemp(1);
-    //   dC[i] =    vectemp(2);
-    //   // cout << " i: " << i << " " <<  irowC[i] << " " << jcolC[i] << " " << dC[i] << endl;
-    // }
-
-    int mz = 0;
-    double * clow=0;
-    char *  iclow=0;
-    double * cupp=0;
-    char *  icupp=0;
-    int nnzC = 0;
-    int *irowC=0;
-    int *jcolC=0;
-    double *dC=0;
-
+    /* bieq */
+    const int mz   = bieq.size();
+    double clow[mz], cupp[mz];
+    char  iclow[mz], icupp[mz];
+    for (int i = 0; i<mz; i++){
+      clow[i]   = 0;
+      iclow[i]  = 0;
+      cupp[i]   = bieq(i);
+      icupp[i]  = 1;
+    }
+    /* Aieq */ 
+    /* note non-Zero terms didnt remove */
+    // cout << " Aieq: " << Aieq << endl;
+    int nnzC = Aieq.size();
+    int irowC[nnzC], jcolC[nnzC];
+    double dC[nnzC];
+    int m =0;
+    for (int j = 0; j<nnzC/mz; j++){
+      for (int i = 0; i<mz; i++){
+        irowC[m]=i;
+        jcolC[m]=j;
+        dC[m] = Aieq(i,j);
+        // cout << " m: " << m << " dC: " << dC[m] <<endl;
+        m++;
+      }
+    }
     /* beq */
     int my = beq.size();
     double b[my];
-    for (int i=0; i< my; i++){
+    for (int i = 0; i< my; i++){
       b[i] = beq(i);
     }
     /* Aeq */
-    deque<Vec3> Aeq2d = MatrixA2ooqpdeque(Aeq, my);
-    int nnzA = Aeq2d.size();
+    /* note non-Zero terms didnt remove */
+    cout << " Aeq: " << Aeq << endl;
+    int nnzA = Aeq.size();
     int irowA[nnzA], jcolA[nnzA];
     double dA[nnzA];
-    // cout << " Aeq: " << endl;
-    for (int i = 0; i<nnzA; i++){
-      Vec3 vectemp = Aeq2d.at(i);
-      irowA[i] = vectemp(0);
-      jcolA[i] = vectemp(1);
-      dA[i] =    vectemp(2);
-      // cout << " i: " << i << " " << irowA[i] << " " << jcolA[i] << " " << dA[i] << endl;
+    m = 0;
+    cout << " nnza: " << nnzA << endl;
+    for (int j = 0; j<nnzA/my; j++){
+      for (int i = 0; i<my; i++){
+        irowA[m]=i;
+        jcolA[m]=j;
+        dA[m]= Aeq(i,j);
+        // cout << " m: " << m << " i: " << i << " j: " << j << " dA: " << dA[m] <<endl;
+        m++;
+      }
     }
     /* start ooqp */
     QpGenSparseMa27 * qp  = new QpGenSparseMa27( nx, my, mz, nnzQ, nnzA, nnzC );
@@ -494,7 +462,7 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
   double CorridorSize;
   deque<Vec4> extendedWPs;
   extendedWPs.push_back(MJwaypoints.front());
-  double step =  1.5;// Meters
+  double step =  1;// Meters
   // Install newwaypoints between original waypoints
   for (int i=2; i<MJwaypoints.size()+1; i++){
     double x1,x2,y1,y2,z1,z2,yaw1,yaw2;

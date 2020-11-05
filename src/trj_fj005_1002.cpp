@@ -23,6 +23,8 @@ using Eigen::MatrixXd;
 
 #include <sstream>
 #include <string>
+#include "QuadProg++.hh"
+#include "Array.hh"
 
 #include "QpGenData.h"
 #include "QpGenVars.h"
@@ -229,39 +231,45 @@ VectorXd vectornegative(VectorXd vector){
   return output;
 }
 
-deque<Vec3> MatrixQ2ooqpdeque(MatrixXd matrix){
-  int nnzQ = sqrt(matrix.size());
-  deque<Vec3> output;
-  Vec3 vector3;
-  for (int i = 1; i < nnzQ/6 +1; i++){
-    int k = i*3+(i-1)*3;
-    vector3 = Vec3(k, k, matrix(k,k));
-    output.push_back(vector3);
-    vector3 = Vec3(k+1, k, matrix(k+1,k));
-    output.push_back(vector3);
-    vector3 = Vec3(k+2, k, matrix(k+2,k));
-    output.push_back(vector3);
-    vector3 = Vec3(k+1, k+1, matrix(k+1,k+1));
-    output.push_back(vector3);
-    vector3 = Vec3(k+2, k+1, matrix(k+2,k+1));
-    output.push_back(vector3);
-    vector3 = Vec3(k+2, k+2, matrix(k+2,k+2));
-    output.push_back(vector3);
+quadprogpp::Matrix<double> convertEigen2matrix (MatrixXd matrix){
+  quadprogpp::Matrix<double> output;
+  int r = matrix.rows();
+  int c = matrix.cols();
+  output.resize(r,c);
+  for(int i=0; i<r; i++){
+    for (int j=0; j<c; j++){
+      output[i][j] = matrix(i,j);
+    }
   }
   return output;
 }
 
-deque<Vec3> MatrixA2ooqpdeque(MatrixXd matrix, int row){
-  int matrixsize = matrix.size();
-  deque<Vec3> output;
-  Vec3 vector3;
-  for (int j = 0; j<matrixsize/row; j++){
-    for (int i = 0; i<row; i++){
-      // if(matrix(i,j)!=0){
-        vector3 = Vec3(i,j,matrix(i,j));
-        output.push_back(vector3);
-      // }
+quadprogpp::Vector<double> convertEigen2vector (VectorXd vector){
+  quadprogpp::Vector<double> output;
+  int s = vector.size();
+  output.resize(s);
+  for(int i=0; i<s;i++){
+    output[i] = vector(i);
+  }
+  return output;
+}
+
+quadprogpp::Matrix<double> Zeromatrix (quadprogpp::Matrix<double> matrix,int c,int r){
+  quadprogpp::Matrix<double> output;
+  output.resize(c,r);
+  for(int i=0; i<r;i++){
+    for (int j=0; j<c; j++){
+      output[i][j] = 0;
     }
+  }
+  return output;
+}
+
+quadprogpp::Vector<double> Zerovector (quadprogpp::Vector<double> vector,int r){
+  quadprogpp::Vector<double> output;
+  output.resize(r);
+  for(int i=0; i<r;i++){
+    output[i] = 0;
   }
   return output;
 }
@@ -361,122 +369,61 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     bieq(2*i-2) = waypoints.at(i) + corridor_r;
     bieq(2*i-1) = corridor_r - waypoints.at(i);
   }
- 
-  /* This section is for OOQP */
-  bool ooqp = 1;
-  if (ooqp>0){  //use OOQP
-    /* Q_all */
-    cout << " Q_all: " << endl;
-    cout << Q_all <<endl;
-    cout << " b_all: " << endl;
-    cout << b_all <<endl;
-    cout << " Aieq: " << endl;
-    cout << Aieq <<endl;
-    cout << " bieq: " << endl;
-    cout << bieq <<endl;
-    cout << " Aeq: " << endl;
-    cout << Aeq <<endl;
-    cout << " beq: " << endl;
-    cout << beq <<endl;
-    int nnzQ = sqrt(Q_all.size());
-    int irowQ[nnzQ], jcolQ[nnzQ];
-    double dQ[nnzQ];
-    deque<Vec3> Q_all2d = MatrixQ2ooqpdeque(Q_all);
-    for (int i=0; i < Q_all2d.size(); i++){
-      Vec3 vectemp = Q_all2d.at(i);
-      irowQ[i] = vectemp(0);
-      jcolQ[i] = vectemp(1);
-      dQ[i] = vectemp(2);
-      // cout << irowQ[i] << " " << jcolQ[i] << " " << dQ[i] << endl;
-    }
-    /* b_all */
-    /* 本來就什麼都沒有 都是0 */
-    int nx   = b_all.size();
-    double    c[nx],xupp[nx],xlow[nx];
-    char      ixupp[nx],ixlow[nx];
-    for (int i = 0; i<nx; i++){
-      c[i] = b_all[i];
-      xupp[i]  = 0;
-      ixupp[i] = 0;
-      xlow[i]  = 0;
-      ixlow[i] = 0;
-    }
-    // /* bieq */
-    // int mz   = bieq.size();
-    // double clow[mz], cupp[mz];
-    // char  iclow[mz], icupp[mz];
-    // for (int i = 0; i<mz; i++){
-    //   clow[i]   = 0;
-    //   iclow[i]  = 0;
-    //   cupp[i]   = bieq[i];
-    //   icupp[i]  = 1;
-    //   // cout << " bieq: " <<  icupp[i] << " " << cupp[i] << endl;
-    // }
-    // /* Aieq */    
-    // deque<Vec3> Aieq2d = MatrixA2ooqpdeque(Aieq, mz);
-    // int nnzC = Aieq2d.size();
-    // int irowC[nnzC], jcolC[nnzC];
-    // double dC[nnzC];
-    // cout << " Aieq: " << nnzC << endl;
-    // for (int i = 0; i<nnzC; i++){
-    //   Vec3 vectemp = Aieq2d.at(i);
-    //   irowC[i] = vectemp(0);
-    //   jcolC[i] = vectemp(1);
-    //   dC[i] =    vectemp(2);
-    //   // cout << " i: " << i << " " <<  irowC[i] << " " << jcolC[i] << " " << dC[i] << endl;
-    // }
 
-    int mz = 0;
-    double * clow=0;
-    char *  iclow=0;
-    double * cupp=0;
-    char *  icupp=0;
-    int nnzC = 0;
-    int *irowC=0;
-    int *jcolC=0;
-    double *dC=0;
+  quadprogpp::Matrix<double> G, CE, CI;
+  quadprogpp::Vector<double> g0, ce0, ci0, x;
 
-    /* beq */
-    int my = beq.size();
-    double b[my];
-    for (int i=0; i< my; i++){
-      b[i] = beq(i);
-    }
-    /* Aeq */
-    deque<Vec3> Aeq2d = MatrixA2ooqpdeque(Aeq, my);
-    int nnzA = Aeq2d.size();
-    int irowA[nnzA], jcolA[nnzA];
-    double dA[nnzA];
-    // cout << " Aeq: " << endl;
-    for (int i = 0; i<nnzA; i++){
-      Vec3 vectemp = Aeq2d.at(i);
-      irowA[i] = vectemp(0);
-      jcolA[i] = vectemp(1);
-      dA[i] =    vectemp(2);
-      // cout << " i: " << i << " " << irowA[i] << " " << jcolA[i] << " " << dA[i] << endl;
-    }
-    /* start ooqp */
-    QpGenSparseMa27 * qp  = new QpGenSparseMa27( nx, my, mz, nnzQ, nnzA, nnzC );
-    QpGenData      * prob = (QpGenData * ) qp->copyDataFromSparseTriple(
-            c,      irowQ,  nnzQ,   jcolQ,  dQ,
-            xlow,   ixlow,  xupp,   ixupp,
 
-            irowA,  nnzA,   jcolA,  dA,     b,
-            irowC,  nnzC,   jcolC,  dC,
-            clow,   iclow,  cupp,   icupp );
-    QpGenVars      * vars   = (QpGenVars *) qp->makeVariables( prob );
-    QpGenResiduals * resid  = (QpGenResiduals *) qp->makeResiduals( prob );
-    GondzioSolver  * s      = new GondzioSolver( qp, prob );
-    
-    int ierr = s->solve(prob,vars, resid);
-    if( ierr == 0 ) {
-    cout.precision(4);
-    cout << "Solution: \n";
-    vars->x->writefToStream( cout, "x[%{index}] = %{value}" );
-    } else {
-    cout << "Could not solve the problem.\n";
-    }
-  }
+  // // Aieq = matrixnegative(Aieq);
+  // // Aeq = matrixnegative(Aeq);
+  // x.resize(Q_all.rows());
+  // x = Zerovector(x,x.size());
+  // Q_all = matrixnegative(Q_all);
+  // G = convertEigen2matrix(Q_all);
+  // CI = convertEigen2matrix(Aieq.transpose());
+  // CE = convertEigen2matrix(Aeq.transpose());
+  // g0 = convertEigen2vector(b_all);
+  // // beq = vectornegative(beq);
+  // ce0 = convertEigen2vector(beq);
+  // // bieq = vectornegative(bieq);
+  // ci0 = convertEigen2vector(bieq);
+
+  int n, m, p;
+	MatrixXd G2(2,2); 
+  MatrixXd CE2(2,1);
+  MatrixXd CI2(2,3);
+  VectorXd g02(2);
+  VectorXd ce02(1);
+  VectorXd ci02(3);
+  G2 << 4, -2, -2, 4;
+  CE2 << 1, 1;
+  CI2 << 1, 0, 1, 0, 1, 1;
+  g02 << 6, 0;
+  ce02 << -3;
+  ci02 << 0, 0, -2;
+  G = convertEigen2matrix(G2);
+  CE = convertEigen2matrix(CE2);
+  CI = convertEigen2matrix(CI2);
+  g0 = convertEigen2vector(g02);
+  ce0 = convertEigen2vector(ce02);
+  ci0 = convertEigen2vector(ci02);
+  x.resize(2);
+  std::cout << "f: " << solve_quadprog(G, g0, CE, ce0, CI, ci0, x) << std::endl;
+	std::cout << "x: " << x << std::endl;
+
+  
+  // cout << " " <<endl;
+  // cout << " " <<endl;
+  // cout << "G:  " <<endl;
+  // cout << G <<endl;
+  // cout << " " <<endl;
+  // cout << " " <<endl;
+  // cout << " " <<endl;
+  // cout << " " <<endl;
+  // cout << "Q_all2:  " <<endl;
+  // cout << Q_all2 <<endl;
+  // cout << " " <<endl;
+  // cout << " " <<endl;
 }
 
 void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajectory main
@@ -494,7 +441,7 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
   double CorridorSize;
   deque<Vec4> extendedWPs;
   extendedWPs.push_back(MJwaypoints.front());
-  double step =  1.5;// Meters
+  double step =  1;// Meters
   // Install newwaypoints between original waypoints
   for (int i=2; i<MJwaypoints.size()+1; i++){
     double x1,x2,y1,y2,z1,z2,yaw1,yaw2;
