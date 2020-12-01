@@ -130,16 +130,16 @@ void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad
 // For minimun jerk trajectory
 void MJwp_Generator(){
   MJwaypoints.clear();
-  Vec4 wp; // state x y z yaw v av waittime
+  Vec4 wp; // x y z yaw
   wp << 0, 0, 1, 0;
   MJwaypoints.push_back(wp);
-  wp << 1, 2, 1, 0;
+  wp << 1, 0, 1, 0;
   MJwaypoints.push_back(wp);
-  // wp << 2, 0, 1, 0;
+  // wp << 1, 1, 1, 0;
   // MJwaypoints.push_back(wp);
-  // wp << 4, 5, 1, 0;
+  // wp << 0, 1, 1, 0;
   // MJwaypoints.push_back(wp);
-  // wp << 5, 2, 1, 0;
+  // wp << 0, 0, 1, 0;
   // MJwaypoints.push_back(wp);
 }
 
@@ -257,16 +257,15 @@ deque<Vec3> MatrixA2ooqpdeque(MatrixXd matrix, int row){
   Vec3 vector3;
   for (int j = 0; j<matrixsize/row; j++){
     for (int i = 0; i<row; i++){
-      // if(matrix(i,j)!=0){
-        vector3 = Vec3(i,j,matrix(i,j));
-        output.push_back(vector3);
-      // }
+      vector3 = Vec3(i,j,matrix(i,j));
+      output.push_back(vector3);
     }
   }
   return output;
 }
 
-void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae, double corridor_r){
+void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae){
+  /* Only one axis generate a single axis deque */
   deque<double> waypoints;
   for(int i=0; i<MJwaypoints.size();i++){
     Vec4 MJwaypoint = MJwaypoints.at(i);
@@ -282,8 +281,8 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     Q_all = blkdiag(Q_all,computeQ(n_order,3,ts.at(i),ts.at(i+1)),i);
   }
   VectorXd b_all = VectorXd::Zero((n_order+1)*n_poly);
-  MatrixXd Aeq = MatrixXd::Zero(3*n_poly+3,n_coef*n_poly);
-  VectorXd beq = VectorXd::Zero(3*n_poly+3);
+  MatrixXd Aeq = MatrixXd::Zero(4*n_poly+2,n_coef*n_poly);
+  VectorXd beq = VectorXd::Zero(4*n_poly+2);
   // Start/terminal pva constraints  (6 equations)
   for (int i=0;i<n_coef; i++){
     MatrixXd tvec;
@@ -311,6 +310,16 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
   beq(4) = ve;
   beq(5) = ae;
   int neq = 6;
+  for(int i=0; i<n_poly-1;i++){
+    MatrixXd tvec = calc_tvec(ts.at(i+1),n_order,0);
+    beq(neq)=waypoints.at(i+1);
+    int k = n_coef*(i+1);
+    for (int j=0; j<tvec.size(); j++){
+      Aeq(neq,k) = tvec(j);
+      k++;
+    }
+    neq++;
+  }
   /* continuous constraints  ((n_poly-1)*3 equations) */
   for(int i=1; i<n_poly; i++){
     MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
@@ -344,88 +353,48 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
         Aeq(neq-1,j-1) = tvec_a(k);
       }else{
         Aeq(neq-1,j-1) = -tvec_a(k-tvec_p_size);
-      }
+      } 
     }
   }
-  // corridor constraints (n_ploy-1 iequations)
-  MatrixXd Aieq = MatrixXd::Zero(2*(n_poly-1),n_coef*n_poly);
-  VectorXd bieq = VectorXd::Zero(2*(n_poly-1));
-  for (int i=1; i<n_poly; i++){
-    MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
-    int k = 0;
-    for(int j=n_coef*i+1; j<n_coef*(i+1)+1; j++){
-      Aieq(2*i-2,j-1) = tvec_p(k);
-      Aieq(2*i-1,j-1) = -tvec_p(k);
-      k++;
-    }
-    bieq(2*i-2) = waypoints.at(i) + corridor_r;
-    bieq(2*i-1) = corridor_r - waypoints.at(i);
-  }
- 
+  // cout << " Q_all: " << endl;
+  // cout << Q_all <<endl;
+  // cout << " b_all: " << endl;
+  // cout << b_all <<endl;
+  // cout << " Aeq: " << endl;
+  // cout << Aeq <<endl;
+  // cout << " beq: " << endl;
+  // cout << beq <<endl;
   /* This section is for OOQP */
   bool ooqp = 1;
   if (ooqp>0){  //use OOQP
     /* Q_all */
-    cout << " Q_all: " << endl;
-    cout << Q_all <<endl;
-    cout << " b_all: " << endl;
-    cout << b_all <<endl;
-    cout << " Aieq: " << endl;
-    cout << Aieq <<endl;
-    cout << " bieq: " << endl;
-    cout << bieq <<endl;
-    cout << " Aeq: " << endl;
-    cout << Aeq <<endl;
-    cout << " beq: " << endl;
-    cout << beq <<endl;
     int nnzQ = sqrt(Q_all.size());
     int irowQ[nnzQ], jcolQ[nnzQ];
     double dQ[nnzQ];
     deque<Vec3> Q_all2d = MatrixQ2ooqpdeque(Q_all);
+    cout << " Q_all: " << endl;
     for (int i=0; i < Q_all2d.size(); i++){
       Vec3 vectemp = Q_all2d.at(i);
       irowQ[i] = vectemp(0);
       jcolQ[i] = vectemp(1);
       dQ[i] = vectemp(2);
-      // cout << irowQ[i] << " " << jcolQ[i] << " " << dQ[i] << endl;
+      cout << irowQ[i] << " " << jcolQ[i] << " " << dQ[i] << endl;
     }
     /* b_all */
-    /* 本來就什麼都沒有 都是0 */
+    /* 本來就什麼都沒有 都是0 */ 
     int nx   = b_all.size();
     double    c[nx],xupp[nx],xlow[nx];
     char      ixupp[nx],ixlow[nx];
+    cout << " b_all: " << endl;
     for (int i = 0; i<nx; i++){
       c[i] = b_all[i];
       xupp[i]  = 0;
       ixupp[i] = 0;
       xlow[i]  = 0;
       ixlow[i] = 0;
+      cout << b_all[i] << endl;
     }
-    // /* bieq */
-    // int mz   = bieq.size();
-    // double clow[mz], cupp[mz];
-    // char  iclow[mz], icupp[mz];
-    // for (int i = 0; i<mz; i++){
-    //   clow[i]   = 0;
-    //   iclow[i]  = 0;
-    //   cupp[i]   = bieq[i];
-    //   icupp[i]  = 1;
-    //   // cout << " bieq: " <<  icupp[i] << " " << cupp[i] << endl;
-    // }
-    // /* Aieq */    
-    // deque<Vec3> Aieq2d = MatrixA2ooqpdeque(Aieq, mz);
-    // int nnzC = Aieq2d.size();
-    // int irowC[nnzC], jcolC[nnzC];
-    // double dC[nnzC];
-    // cout << " Aieq: " << nnzC << endl;
-    // for (int i = 0; i<nnzC; i++){
-    //   Vec3 vectemp = Aieq2d.at(i);
-    //   irowC[i] = vectemp(0);
-    //   jcolC[i] = vectemp(1);
-    //   dC[i] =    vectemp(2);
-    //   // cout << " i: " << i << " " <<  irowC[i] << " " << jcolC[i] << " " << dC[i] << endl;
-    // }
-
+    /* Aieq bieq */ /* inequality constraints */
     int mz = 0;
     double * clow=0;
     char *  iclow=0;
@@ -435,25 +404,26 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     int *irowC=0;
     int *jcolC=0;
     double *dC=0;
-
     /* beq */
     int my = beq.size();
-    double b[my];
+    double b[my]; 
+    // cout << " beq: " << endl;
     for (int i=0; i< my; i++){
       b[i] = beq(i);
+      // cout << b[i] << endl;
     }
     /* Aeq */
     deque<Vec3> Aeq2d = MatrixA2ooqpdeque(Aeq, my);
     int nnzA = Aeq2d.size();
     int irowA[nnzA], jcolA[nnzA];
     double dA[nnzA];
-    // cout << " Aeq: " << endl;
+    cout << " A_eq: " << endl;
     for (int i = 0; i<nnzA; i++){
       Vec3 vectemp = Aeq2d.at(i);
       irowA[i] = vectemp(0);
       jcolA[i] = vectemp(1);
       dA[i] =    vectemp(2);
-      // cout << " i: " << i << " " << irowA[i] << " " << jcolA[i] << " " << dA[i] << endl;
+      cout << " i: " << i << " " << irowA[i] << " " << jcolA[i] << " " << dA[i] << endl;
     }
     /* start ooqp */
     QpGenSparseMa27 * qp  = new QpGenSparseMa27( nx, my, mz, nnzQ, nnzA, nnzC );
@@ -492,46 +462,17 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
   double totalyawrad = 0;
   int n_order = 5;
   double CorridorSize;
-  deque<Vec4> extendedWPs;
-  extendedWPs.push_back(MJwaypoints.front());
-  double step =  1.5;// Meters
-  // Install newwaypoints between original waypoints
-  for (int i=2; i<MJwaypoints.size()+1; i++){
-    double x1,x2,y1,y2,z1,z2,yaw1,yaw2;
-    Vec4 wp1 = MJwaypoints.at(i-2);
-    Vec4 wp2 = MJwaypoints.at(i-1);
-    int n = (sqrt(pow((wp1[0]-wp2[0]),2)+pow((wp1[1]-wp2[1]),2)+pow((wp1[2]-wp2[2]),2)))/step + 2;
-    deque<double> X,Y,Z,Yaw;
-    double dx = (wp2[0]-wp1[0])/(n-1);
-    double dy = (wp2[1]-wp1[1])/(n-1);
-    double dz = (wp2[2]-wp1[2])/(n-1);
-    double dyaw = (wp2[3]-wp1[3])/(n-1);
-    for (int i=1; i<n; i++){
-      X.push_back(wp1[0]+i*dx);
-      Y.push_back(wp1[1]+i*dy);
-      Z.push_back(wp1[2]+i*dz);
-      Yaw.push_back(wp1[3]+i*dz);
-    }
-    for (int i=0; i<X.size();i++){
-      Vec4 XYZYAW = Vec4(X.at(i),Y.at(i),Z.at(i),Yaw.at(i));
-      extendedWPs.push_back(XYZYAW);
-    }
-  }
-  // Arrange time according to every wpts using their distance and the total velocity.
+  /* Arrange time according to every wpts using their distance and the total velocity. */
   deque<double> dist; //Distance between each waypoints
   deque<double> yaws; //Yaw changes between each waypoints
   deque<double> ts;   //Time cost between each waypoints
-  dist.clear();
-  int wpcounts = extendedWPs.size();
-  for (int i = 0; i < wpcounts-1; i++){ //Calculating the total distance and yaw changes (ArrangeT)
-    Vec4 wpA = extendedWPs.at(i);
-    Vec4 wpB = extendedWPs.at(i+1);
-    double d = sqrt(pow((wpA[0]-wpB[0]),2)+pow((wpA[1]-wpB[1]),2)+pow((wpA[2]-wpB[2]),2)); // distance between two wpts
-    dist.push_back(d);
-    totaldist += d;
-    double y = abs(wpA[3]-wpB[3]);
-    yaws.push_back(y);
-    totalyawrad += y;
+  dist.clear(); yaws.clear(); ts.clear();
+  /* Calc total dist and yaw*/
+  for (int i = 0; i< MJwaypoints.size()-1; i++){
+    Vec4 wp    = MJwaypoints.at(i);
+    Vec4 nextwp = MJwaypoints.at(i+1);
+    totaldist = totaldist + sqrt(pow(nextwp(0)-wp(0),2)+pow(nextwp(1)-wp(1),2)+pow(nextwp(2)-wp(2),2));
+    dist.push_back(sqrt(pow(nextwp(0)-wp(0),2)+pow(nextwp(1)-wp(1),2)+pow(nextwp(2)-wp(2),2)));
   }
   double totaltime = totaldist/velocity;
   double k = totaltime/totaldist;
@@ -541,20 +482,16 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
     double tss = ts.back()+dist.at(i)*k;
     ts.push_back(tss);
   }
-  // ts cout
-  // for (int i = 0; i<ts.size(); i++){
-  //   cout << "ts: " << ts.at(i) <<endl;
-  // }
-  MinJerkPoly(extendedWPs,0,ts,n_order,V0[1],A0[1],V1[1],A1[1],step); //Second intut x=0;
+  MinJerkPoly(MJwaypoints,0,ts,n_order,V0[1],A0[1],V1[1],A1[1]); //Second intut x=0;
 
-  cout << "------------------------------------------------------------------------------" << endl;
-  cout << "------------------------------------------------------------------------------" << endl;
-  cout << "Minimun Jerk Traj Waypoint counts: " << wpcounts <<endl;
-  cout << "Total dist: " << totaldist << endl;
-  cout << "Total Yaw: " << totalyawrad << endl;
-  // cout << "TS count: " << ts.at(3) << endl;
-  cout << "------------------------------------------------------------------------------" << endl;
-  cout << "------------------------------------------------------------------------------" << endl;
+  // cout << "------------------------------------------------------------------------------" << endl;
+  // cout << "------------------------------------------------------------------------------" << endl;
+  // cout << "Minimun Jerk Traj Waypoint counts: " << wpcounts <<endl;
+  // cout << "Total dist: " << totaldist << endl;
+  // cout << "Total Yaw: " << totalyawrad << endl;
+  // // cout << "TS count: " << ts.at(3) << endl;
+  // cout << "------------------------------------------------------------------------------" << endl;
+  // cout << "------------------------------------------------------------------------------" << endl;
 }
 
 // For Trajectory publish

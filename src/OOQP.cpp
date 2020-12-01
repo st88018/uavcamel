@@ -157,15 +157,15 @@ double   dA[]  = {1,0,0,0,0,0,0,0,0,0,
 // int   jcolC[]  = {0,1,2,3,4,5,6,7,8,9};
 // double   dC[]  = {0,0,0,0,0,1,1.11,1.25,1.39,1.56};
 
-// const int mz   = 0;
-// double *clow  = 0;
-// char  *iclow  = 0;
-// double *cupp  = 0;
-// char  *icupp  = 0;
-// const int nnzC = 0;
-// int   *irowC  = 0;
-// int   *jcolC  = 0;
-// double   *dC  = 0;
+const int mz   = 0;
+double *clow  = 0;
+char  *iclow  = 0;
+double *cupp  = 0;
+char  *icupp  = 0;
+const int nnzC = 0;
+int   *irowC  = 0;
+int   *jcolC  = 0;
+double   *dC  = 0;
 
 int main( int argc, char * argv[] )
 {
