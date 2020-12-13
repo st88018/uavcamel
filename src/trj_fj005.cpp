@@ -56,7 +56,7 @@ deque<Vec8> waypoints;
 deque<Vec4> MJwaypoints;
 deque<double> ts;
 
-void Mission_Generator(){
+void Mission_Generator(){ // wp is the major mission deque
   // Waypoints
   Vec8 wp; // state x y z yaw v av waittime
   wp << 1, 0, 0 , 5, 0, 1, 1, 1 ;   // state = 1; takeoff no heading change.
