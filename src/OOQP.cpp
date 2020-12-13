@@ -167,8 +167,72 @@ int   *irowC  = 0;
 int   *jcolC  = 0;
 double   *dC  = 0;
 
+/* Testing stuff start ehere */
+
+void MJwp_Generator(){ // Generate a tasting set of WP for MinJerkTraj
+  MJwaypoints.clear();
+  Vec4 wp; // x y z yaw
+  wp << 0, 0, 1, 0;
+  MJwaypoints.push_back(wp);
+  wp << 1, 0, 1, 0;
+  MJwaypoints.push_back(wp);
+  // wp << 1, 1, 1, 0;
+  // MJwaypoints.push_back(wp);
+  // wp << 0, 1, 1, 0;
+  // MJwaypoints.push_back(wp);
+  // wp << 0, 0, 1, 0;
+  // MJwaypoints.push_back(wp);
+}
+
+void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajectory main
+  cout << "------------------------------------------------------------------------------" << endl;
+  cout << "------------------------------------------------------------------------------" << endl;
+  cout << "Start generating MinJerkTraj " << endl;
+  //              x,y,z,yaw   (xyz in meter yaw in rad)
+  double V0[4] = {0,0,0,0};
+  double A0[4] = {0,0,0,0};
+  double V1[4] = {0,0,0,0};
+  double A1[4] = {0,0,0,0};
+  double totaldist = 0;
+  double totalyawrad = 0;
+  int n_order = 5;
+  double CorridorSize;
+  /* Arrange time according to every wpts using their distance and the total velocity. */
+  deque<double> dist; //Distance between each waypoints
+  deque<double> yaws; //Yaw changes between each waypoints
+  deque<double> ts;   //Time cost between each waypoints
+  dist.clear(); yaws.clear(); ts.clear();
+  /* Calc total dist and yaw*/
+  for (int i = 0; i< MJwaypoints.size()-1; i++){
+    Vec4 wp    = MJwaypoints.at(i);
+    Vec4 nextwp = MJwaypoints.at(i+1);
+    totaldist = totaldist + sqrt(pow(nextwp(0)-wp(0),2)+pow(nextwp(1)-wp(1),2)+pow(nextwp(2)-wp(2),2));
+    dist.push_back(sqrt(pow(nextwp(0)-wp(0),2)+pow(nextwp(1)-wp(1),2)+pow(nextwp(2)-wp(2),2)));
+  }
+  double totaltime = totaldist/velocity;
+  double k = totaltime/totaldist;
+  ts.clear();
+  ts.push_back(0);
+  for (int i=0;i<dist.size();i++){
+    double tss = ts.back()+dist.at(i)*k;
+    ts.push_back(tss);
+  }
+  MinJerkPoly(MJwaypoints,0,ts,n_order,V0[1],A0[1],V1[1],A1[1]); //Second input x=0;
+
+  // cout << "------------------------------------------------------------------------------" << endl;
+  // cout << "------------------------------------------------------------------------------" << endl;
+  // cout << "Minimun Jerk Traj Waypoint counts: " << wpcounts <<endl;
+  // cout << "Total dist: " << totaldist << endl;
+  // cout << "Total Yaw: " << totalyawrad << endl;
+  // // cout << "TS count: " << ts.at(3) << endl;
+  // cout << "------------------------------------------------------------------------------" << endl;
+  // cout << "------------------------------------------------------------------------------" << endl;
+}
+
 int main( int argc, char * argv[] )
 {
+  bool useOOQP = 1;
+if (useOOQP == 1){  //OOQP
   int usage_ok = 1, quiet = 0;
   // cout <<" OKOK "<<endl;
   if( argc > 2 ) usage_ok = 0;
@@ -212,4 +276,5 @@ int main( int argc, char * argv[] )
     cout << "Could not solve the problem.\n";
   }
   return ierr;
+}
 }
