@@ -264,5 +264,7 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
 
 int main( int argc, char * argv[] )
 {
+  cout << "------Checkpoint 1---------------------------------" << endl;
   MinJerkTraj(MJwaypoints, 1); //The second input is the avg vel for the whole traj
+  cout << "------Checkpoint 2---------------------------------" << endl; 
 }
