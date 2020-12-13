@@ -10,164 +10,197 @@
 
 #include <iostream>
 #include <string.h>
+#include <Eigen/Dense>
+using Eigen::MatrixXd;
 
 using namespace std;
 
-// const int nx   = 2;
-// double    c[]  = { 1.5,  -2 };
-
-// double  xupp[] = { 20,   0 };
-// char   ixupp[] = {  1,   0 };
-
-// double  xlow[] = {  0,   0 };
-// char   ixlow[] = {  1,   1 };
-
-// const int nnzQ = 3;
-// int    irowQ[] = {  0,   1,   1 }; 
-// int    jcolQ[] = {  0,   0,   1 };
-// double    dQ[] = {  8,   2,  10 };
-
-// int my         = 0;
-// double * b     = 0;
-// int nnzA       = 0;
-// int * irowA    = 0;
-// int * jcolA    = 0;
-// double * dA    = 0;
-
-// const int mz   = 2;
-// double clow[]  = { 2,   0 };
-// char  iclow[]  = { 1,   0 };
-// double cupp[]  = { 0,   6 };
-// char  icupp[]  = { 0,   1 };
-
-// const int nnzC = 4;
-// int   irowC[]  = { 0,   0,   1,   1};
-// int   jcolC[]  = { 0,   1,   0,   1};
-// double   dC[]  = { 2,   1,  -1,   2};
-
-/*------------------------------------------------------------TesT2*/
-// //b_all
-// const int nx   = 2;
-// double    c[]  = { -2,  -6 };
-// //l u
-// double  xupp[] = { 0 };
-// char   ixupp[] = { 0 };
-// double  xlow[] = {  0 };
-// char   ixlow[] = {  0 };
-// // Q_all
-// const int nnzQ = 3;
-// int    irowQ[] = {  0,   1,   1 }; 
-// int    jcolQ[] = {  0,   0,   1 };
-// double    dQ[] = {  1,  -1,   2 };
-// //Aeqbeq
-// int my         = 1;
-// double b[]     = {0};
-// int nnzA       = 2;
-// int irowA[]    = {0,0};
-// int jcolA[]    = {0,1};
-// double dA[]    = {1,1};
-// // int my         = 0;
-// // double b[]     = {0};
-// // int nnzA       = 0;
-// // int *irowA    = 0;
-// // int *jcolA    = 0;
-// // double *dA    = 0;
-// //AieqBieq
-// const int mz   = 3;
-// double clow[]  = {0,0,0};
-// char  iclow[]  = {0,0,0};
-// double cupp[]  = {2,2,3};
-// char  icupp[]  = {1,1,1};
-// const int nnzC = 6;
-// int   irowC[]  = {0,0,1,1,2,2};
-// int   jcolC[]  = {0,1,0,1,0,1};
-// double   dC[]  =  {1,1,-1,2,2,1};
-// // const int mz   = 0;
-// // double *clow  = 0;
-// // char  *iclow  = 0;
-// // double *cupp  = 0;
-// // char  *icupp  = 0;
-// // const int nnzC = 0;
-// // int   *irowC  = 0;
-// // int   *jcolC  = 0;
-// // double   *dC  = 0;
-
-/*------------------------------------------------------------Q_all*/
-const int nnzQ = 6;
-int    irowQ[] = {  3,   4,   4,    8,    9,     9}; 
-int    jcolQ[] = {  3,   3,   4,    8,    8,     9};
-double    dQ[] = {40,90,268,40,270,1878};
-/*------------------------------------------------------------b_all*/
-int nx   = 10;
-double   c[]  = {0,0,0,0,0,0,0,0,0,0};  
-/*------------------------------------------------------------lbub*/
-double  xupp[] = {0};
-char   ixupp[] = {0};
-double  xlow[] = {0};
-char   ixlow[] = {0};
-/*----------------------------------------------------------AeqBeq*/
-int my         = 9;
-double  b[]    = {0,0,0,1,0,0,0,0,0};
-int nnzA     = 90;
-int irowA[]    = {0,0,0,0,0,0,0,0,0,0,
-                  1,1,1,1,1,1,1,1,1,1,
-                  2,2,2,2,2,2,2,2,2,2,
-                  3,3,3,3,3,3,3,3,3,3,
-                  4,4,4,4,4,4,4,4,4,4,
-                  5,5,5,5,5,5,5,5,5,5,
-                  6,6,6,6,6,6,6,6,6,6,
-                  7,7,7,7,7,7,7,7,7,7,
-                  8,8,8,8,8,8,8,8,8,8};
-int   jcolA[]  = {0,1,2,3,4,5,6,7,8,9,
-                  0,1,2,3,4,5,6,7,8,9,
-                  0,1,2,3,4,5,6,7,8,9,
-                  0,1,2,3,4,5,6,7,8,9,
-                  0,1,2,3,4,5,6,7,8,9,
-                  0,1,2,3,4,5,6,7,8,9,
-                  0,1,2,3,4,5,6,7,8,9,
-                  0,1,2,3,4,5,6,7,8,9,
-                  0,1,2,3,4,5,6,7,8,9};
-double   dA[]  = {1,0,0,0,0,0,0,0,0,0,
-                  0,1,0,0,0,0,0,0,0,0,
-                  0,0,2,0,0,0,0,0,0,0,
-                  0,0,0,0,0,1,2,5,11,25,
-                  0,0,0,0,0,0,1,4,15,44,
-                  0,0,0,0,0,0,0,2,13,60,
-                  1,1,1,1,1,-1,-1,-1,-1,-1,
-                  0,1,2,3,5,0,-1,-2,-3,-5,
-                  0,0,2,6,15,0,0,-2,-6,-15};
-// /*------------------------------------------------------------AieqBieq*/
-// const int mz   = 2;
-// double clow[]  = {0,0};
-// char   iclow[] = {0,0};
-// double cupp[]  = {2,1};
-// char  icupp[]  = {1,1};
-// const int nnzC = 20;
-// int  irowC[]  = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1};
-// int  jcolC[]  = {0,1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9};
-// double   dC[] = {0,0,0,0,0,1,1.11,1.25,1.39,1.56,
-//                  0,0,0,0,0,-1,-1.11,-1.25,-1.39,-1.56};
-// int mz   = 1;
-// char   iclow[] = {1}; 
-// double clow[]  = {1}; //d
-// char  icupp[]  = {1}; 
-// double cupp[]  = {2}; //f
-// int nnzC = 10;
-// int   irowC[]  = {0,0,0,0,0,0,0,0,0,0};
-// int   jcolC[]  = {0,1,2,3,4,5,6,7,8,9};
-// double   dC[]  = {0,0,0,0,0,1,1.11,1.25,1.39,1.56};
-
-const int mz   = 0;
-double *clow  = 0;
-char  *iclow  = 0;
-double *cupp  = 0;
-char  *icupp  = 0;
-const int nnzC = 0;
-int   *irowC  = 0;
-int   *jcolC  = 0;
-double   *dC  = 0;
-
 /* Testing stuff start ehere */
+
+void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae){
+  /* Only one axis generate a single axis deque */
+  deque<double> waypoints;
+  for(int i=0; i<MJwaypoints.size();i++){
+    Vec4 MJwaypoint = MJwaypoints.at(i);
+    waypoints.push_back(MJwaypoint(xyzyaw));
+  }
+  double p0 = waypoints.front();
+  double pe = waypoints.back();
+  int n_poly = waypoints.size()-1;
+  int n_coef = n_order+1;
+  //Compute Q
+  MatrixXd Q_all = MatrixXd::Zero((n_order+1)*n_poly,(n_order+1)*n_poly);
+  for (int i=0; i<n_poly;i++){
+    Q_all = blkdiag(Q_all,computeQ(n_order,3,ts.at(i),ts.at(i+1)),i);
+  }
+  VectorXd b_all = VectorXd::Zero((n_order+1)*n_poly);
+  MatrixXd Aeq = MatrixXd::Zero(4*n_poly+2,n_coef*n_poly);
+  VectorXd beq = VectorXd::Zero(4*n_poly+2);
+  // Start/terminal pva constraints  (6 equations)
+  for (int i=0;i<n_coef; i++){
+    MatrixXd tvec;
+    tvec = calc_tvec(ts.front(),n_order,0);
+    Aeq(0,i) = tvec(i);
+    tvec = calc_tvec(ts.front(),n_order,1);
+    Aeq(1,i) = tvec(i);
+    tvec = calc_tvec(ts.front(),n_order,2);
+    Aeq(2,i) = tvec(i);
+  }
+  for (int i= n_coef*(n_poly-1); i<n_coef*n_poly; i++){
+    int j = i-n_coef*(n_poly-1);
+    MatrixXd tvec;
+    tvec = calc_tvec(ts.back(),n_order,0);
+    Aeq(3,i) = tvec(j);
+    tvec = calc_tvec(ts.back(),n_order,1);
+    Aeq(4,i) = tvec(j);
+    tvec = calc_tvec(ts.back(),n_order,2);
+    Aeq(5,i) = tvec(j);
+  }
+  beq(0) = p0;
+  beq(1) = v0;
+  beq(2) = a0;
+  beq(3) = pe;
+  beq(4) = ve;
+  beq(5) = ae;
+  int neq = 6;
+  for(int i=0; i<n_poly-1;i++){
+    MatrixXd tvec = calc_tvec(ts.at(i+1),n_order,0);
+    beq(neq)=waypoints.at(i+1);
+    int k = n_coef*(i+1);
+    for (int j=0; j<tvec.size(); j++){
+      Aeq(neq,k) = tvec(j);
+      k++;
+    }
+    neq++;
+  }
+  /* continuous constraints  ((n_poly-1)*3 equations) */
+  for(int i=1; i<n_poly; i++){
+    MatrixXd tvec_p = calc_tvec(ts.at(i),n_order,0);
+    MatrixXd tvec_v = calc_tvec(ts.at(i),n_order,1);
+    MatrixXd tvec_a = calc_tvec(ts.at(i),n_order,2);
+    neq++;
+    int tvec_p_size = tvec_p.size();
+    for(int j=n_coef*(i-1)+1; j<n_coef*(i+1)+1; j++){
+      int k = j-n_coef*(i-1)-1;
+      if (k < tvec_p_size){
+        Aeq(neq-1,j-1) = tvec_p(k);
+      }else{
+        Aeq(neq-1,j-1) = - tvec_p(k-tvec_p_size);
+      }
+    }
+    neq++;
+    int tvec_v_size = tvec_v.size();
+    for(int j=n_coef*(i-1)+1; j<n_coef*(i+1)+1; j++){
+      int k = j-n_coef*(i-1)-1;
+      if (k < tvec_v_size){
+        Aeq(neq-1,j-1) = tvec_v(k);
+      }else{
+        Aeq(neq-1,j-1) = -tvec_v(k-tvec_p_size);
+      }
+    }
+    neq++;
+    int tvec_a_size = tvec_a.size();
+    for(int j=n_coef*(i-1)+1; j<n_coef*(i+1)+1; j++){
+      int k = j-n_coef*(i-1)-1;
+      if (k < tvec_a_size){
+        Aeq(neq-1,j-1) = tvec_a(k);
+      }else{
+        Aeq(neq-1,j-1) = -tvec_a(k-tvec_p_size);
+      }
+    }
+  }
+  // cout << " Q_all: " << endl;
+  // cout << Q_all <<endl;
+  // cout << " b_all: " << endl;
+  // cout << b_all <<endl;
+  // cout << " Aeq: " << endl;
+  // cout << Aeq <<endl;
+  // cout << " beq: " << endl;
+  // cout << beq <<endl;
+  /* This section is for OOQP */
+  bool ooqp = 1;
+  if (ooqp>0){  //use OOQP
+    /* Q_all */
+    int nnzQ = sqrt(Q_all.size());
+    int irowQ[nnzQ], jcolQ[nnzQ];
+    double dQ[nnzQ];
+    deque<Vec3> Q_all2d = MatrixQ2ooqpdeque(Q_all);
+    cout << " Q_all: " << endl;
+    for (int i=0; i < Q_all2d.size(); i++){
+      Vec3 vectemp = Q_all2d.at(i);
+      irowQ[i] = vectemp(0);
+      jcolQ[i] = vectemp(1);
+      dQ[i] = vectemp(2);
+      cout << irowQ[i] << " " << jcolQ[i] << " " << dQ[i] << endl;
+    }
+    /* b_all */
+    /* 本來就什麼都沒有 都是0 */ 
+    int nx   = b_all.size();
+    double    c[nx],xupp[nx],xlow[nx];
+    char      ixupp[nx],ixlow[nx];
+    cout << " b_all: " << endl;
+    for (int i = 0; i<nx; i++){
+      c[i] = b_all[i];
+      xupp[i]  = 0;
+      ixupp[i] = 0;
+      xlow[i]  = 0;
+      ixlow[i] = 0;
+      cout << b_all[i] << endl;
+    }
+    /* Aieq bieq */ /* inequality constraints */
+    int mz = 0;
+    double * clow=0;
+    char *  iclow=0;
+    double * cupp=0;
+    char *  icupp=0;
+    int nnzC = 0;
+    int *irowC=0;
+    int *jcolC=0;
+    double *dC=0;
+    /* beq */
+    int my = beq.size();
+    double b[my]; 
+    // cout << " beq: " << endl;
+    for (int i=0; i< my; i++){
+      b[i] = beq(i);
+      // cout << b[i] << endl;
+    }
+    /* Aeq */
+    deque<Vec3> Aeq2d = MatrixA2ooqpdeque(Aeq, my);
+    int nnzA = Aeq2d.size();
+    int irowA[nnzA], jcolA[nnzA];
+    double dA[nnzA];
+    cout << " A_eq: " << endl;
+    for (int i = 0; i<nnzA; i++){
+      Vec3 vectemp = Aeq2d.at(i);
+      irowA[i] = vectemp(0);
+      jcolA[i] = vectemp(1);
+      dA[i] =    vectemp(2);
+      cout << " i: " << i << " " << irowA[i] << " " << jcolA[i] << " " << dA[i] << endl;
+    }
+    /* start ooqp */
+    QpGenSparseMa27 * qp  = new QpGenSparseMa27( nx, my, mz, nnzQ, nnzA, nnzC );
+    QpGenData      * prob = (QpGenData * ) qp->copyDataFromSparseTriple(
+            c,      irowQ,  nnzQ,   jcolQ,  dQ,
+            xlow,   ixlow,  xupp,   ixupp,
+
+            irowA,  nnzA,   jcolA,  dA,     b,
+            irowC,  nnzC,   jcolC,  dC,
+            clow,   iclow,  cupp,   icupp );
+    QpGenVars      * vars   = (QpGenVars *) qp->makeVariables( prob );
+    QpGenResiduals * resid  = (QpGenResiduals *) qp->makeResiduals( prob );
+    GondzioSolver  * s      = new GondzioSolver( qp, prob );
+    
+    int ierr = s->solve(prob,vars, resid);
+    if( ierr == 0 ) {
+    cout.precision(4);
+    cout << "Solution: \n";
+    vars->x->writefToStream( cout, "x[%{index}] = %{value}" );
+    } else {
+    cout << "Could not solve the problem.\n";
+    }
+  }
+}
 
 void MJwp_Generator(){ // Generate a tasting set of WP for MinJerkTraj
   MJwaypoints.clear();
@@ -231,50 +264,5 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
 
 int main( int argc, char * argv[] )
 {
-  bool useOOQP = 1;
-if (useOOQP == 1){  //OOQP
-  int usage_ok = 1, quiet = 0;
-  // cout <<" OKOK "<<endl;
-  if( argc > 2 ) usage_ok = 0;
-  if( argc == 2 ) {
-    if( 0 == strcmp( "--quiet", argv[1] ) ) {
-      quiet = 1;
-    } else {
-      usage_ok = 0;
-    }
-  } 
-  if( !usage_ok ) {
-    cerr << "Usage: " <<  argv[0] << " [ --quiet ]\n";
-    return 1;
-  }
-    
-  QpGenSparseMa27 * qp 
-    = new QpGenSparseMa27( nx, my, mz, nnzQ, nnzA, nnzC );
-  
-  QpGenData      * prob = (QpGenData * ) qp->copyDataFromSparseTriple(
-        c,      irowQ,  nnzQ,   jcolQ,  dQ,
-        xlow,   ixlow,  xupp,   ixupp,
-        irowA,  nnzA,   jcolA,  dA,     b,
-        irowC,  nnzC,   jcolC,  dC,
-        clow,   iclow,  cupp,   icupp );
-
-  QpGenVars      * vars 
-    = (QpGenVars *) qp->makeVariables( prob );
-  QpGenResiduals * resid 
-    = (QpGenResiduals *) qp->makeResiduals( prob );
-  
-  GondzioSolver  * s     = new GondzioSolver( qp, prob );
-  
-  if( !quiet ) s->monitorSelf();
-  int ierr = s->solve(prob,vars, resid);
-  
-  if( ierr == 0 ) {
-    cout.precision(4);
-    cout << "Solution: \n";
-    vars->x->writefToStream( cout, "x[%{index}] = %{value}" );
-  } else {
-    cout << "Could not solve the problem.\n";
-  }
-  return ierr;
-}
+  MinJerkTraj(MJwaypoints, 1); //The second input is the avg vel for the whole traj
 }
