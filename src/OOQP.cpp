@@ -226,14 +226,14 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
       }
     }
   }
-  // cout << " Q_all: " << endl;
-  // cout << Q_all <<endl;
-  // cout << " b_all: " << endl;
-  // cout << b_all <<endl;
+  cout << " Q_all: " << endl;
+  cout << Q_all <<endl;
+  cout << " b_all: " << endl;
+  cout << b_all <<endl;
   cout << " Aeq: " << endl;
   cout << Aeq <<endl;
-  // cout << " beq: " << endl;
-  // cout << beq <<endl;
+  cout << " beq: " << endl;
+  cout << beq <<endl;
 
   /* This section is for OOQP */
   bool ooqp = 1;
@@ -288,13 +288,13 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     int nnzA = Aeq2d.size();
     int irowA[nnzA], jcolA[nnzA];
     double dA[nnzA];
-    cout << " A_eq: " << endl;
+    // cout << " A_eq: " << endl;
     for (int i = 0; i<nnzA; i++){
       Vec3 vectemp = Aeq2d.at(i);
       irowA[i] = vectemp(0);
       jcolA[i] = vectemp(1);
       dA[i] =    vectemp(2);
-      cout << " i: " << i << " " << irowA[i] << " " << jcolA[i] << " " << dA[i] << endl;
+      // cout << " i: " << i << " " << irowA[i] << " " << jcolA[i] << " " << dA[i] << endl;
     }
     /* start ooqp */
     QpGenSparseMa27 * qp  = new QpGenSparseMa27( nx, my, mz, nnzQ, nnzA, nnzC );
@@ -317,6 +317,10 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     } else {
     cout << "Could not solve the problem.\n";
     }
+    double norm = 0.0;
+    int length = vars->x->length();
+    double p[length];
+    vars->x->copyIntoArray(p);
   }
 }
 
@@ -354,10 +358,10 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
     double tss = ts.back()+dist.at(i)*k;
     ts.push_back(tss);
   }
-  // cout << "ts: " << endl;
-  // for (int i=0; i<ts.size(); i++){
-  //   cout << ts.at(i) << endl;
-  // }
+  cout << "ts: " << endl;
+  for (int i=0; i<ts.size(); i++){
+    cout << ts.at(i) << endl;
+  }
   MinJerkPoly(MJwaypoints,0,ts,n_order,V0[1],A0[1],V1[1],A1[1]); //Second input x=0;
   // cout << "------------------------------------------------------------------------------" << endl;
   // cout << "------------------------------------------------------------------------------" << endl;
@@ -376,10 +380,10 @@ void MJwp_Generator(){ // Generate a tasting set of WP for MinJerkTraj
   MJwaypoints.push_back(wp);
   wp << 1, 0, 1, 0;
   MJwaypoints.push_back(wp);
-  // wp << 1, 1, 1, 0;
-  // MJwaypoints.push_back(wp);
-  // wp << 0, 1, 1, 0;
-  // MJwaypoints.push_back(wp);
+  wp << 1, 1, 1, 0;
+  MJwaypoints.push_back(wp);
+  wp << 0, 1, 1, 0;
+  MJwaypoints.push_back(wp);
   // wp << 0, 0, 1, 0;
   // MJwaypoints.push_back(wp);
 }
