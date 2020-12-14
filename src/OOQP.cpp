@@ -36,10 +36,14 @@ using Eigen::MatrixXd;
 using namespace std;
 
 /* Testing stuff start ehere */
+deque<Vec8> trajectory2;
+Vec2 traj2_information;
 
 // Minimun jerk Traj
 deque<Vec4> MJwaypoints;
 deque<double> ts;
+deque<double> tt; 
+double Trajectory_timestep = 0.02; // in Seconds
 
 int prod(MatrixXd ar){  //For computeQ use
   int result = 1;
@@ -50,7 +54,7 @@ int prod(MatrixXd ar){  //For computeQ use
   return result;
 }
 
-MatrixXd computeQ (int n, int r, double t1, double t2){
+MatrixXd computeQ (int n, int r, double t1, double t2){ // For MinJerkPoly
   int nr = (n-r)*2+1;
   MatrixXd T = MatrixXd::Zero(nr,1);
   MatrixXd Q = MatrixXd::Zero(n+1,n+1);
@@ -98,7 +102,7 @@ MatrixXd calc_tvec(double t, int n_order, int r){ // For MinJerkPoly
   return tvec;
 }
 
-deque<Vec3> MatrixQ2ooqpdeque(MatrixXd matrix){
+deque<Vec3> MatrixQ2ooqpdeque(MatrixXd matrix){ // For MinJerkPoly
   int nnzQ = sqrt(matrix.size());
   deque<Vec3> output;
   Vec3 vector3;
@@ -120,7 +124,7 @@ deque<Vec3> MatrixQ2ooqpdeque(MatrixXd matrix){
   return output;
 }
 
-deque<Vec3> MatrixA2ooqpdeque(MatrixXd matrix, int row){
+deque<Vec3> MatrixA2ooqpdeque(MatrixXd matrix, int row){ // For MinJerkPoly
   int matrixsize = matrix.size();
   deque<Vec3> output;
   Vec3 vector3;
@@ -133,8 +137,8 @@ deque<Vec3> MatrixA2ooqpdeque(MatrixXd matrix, int row){
   return output;
 }
 
-
-void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae){
+MatrixXd MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_order,double v0, double a0, double ve, double ae){
+  MatrixXd poly;
   /* Only one axis generate a single axis deque */
   deque<double> waypoints;
   for(int i=0; i<MJwaypoints.size();i++){
@@ -226,14 +230,14 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
       }
     }
   }
-  cout << " Q_all: " << endl;
-  cout << Q_all <<endl;
-  cout << " b_all: " << endl;
-  cout << b_all <<endl;
-  cout << " Aeq: " << endl;
-  cout << Aeq <<endl;
-  cout << " beq: " << endl;
-  cout << beq <<endl;
+  // cout << " Q_all: " << endl;
+  // cout << Q_all <<endl;
+  // cout << " b_all: " << endl;
+  // cout << b_all <<endl;
+  // cout << " Aeq: " << endl;
+  // cout << Aeq <<endl;
+  // cout << " beq: " << endl;
+  // cout << beq <<endl;
 
   /* This section is for OOQP */
   bool ooqp = 1;
@@ -311,9 +315,9 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     
     int ierr = s->solve(prob,vars, resid);
     if( ierr == 0 ) {
-    cout.precision(4);
-    cout << "Solution: \n";
-    vars->x->writefToStream( cout, "x[%{index}] = %{value}" );
+    // cout.precision(4);
+    // cout << "Solution: \n";
+    // vars->x->writefToStream( cout, "x[%{index}] = %{value}" );
     } else {
     cout << "Could not solve the problem.\n";
     }
@@ -321,7 +325,54 @@ void MinJerkPoly(deque<Vec4> MJwaypoints,int xyzyaw,deque<double> ts, int n_orde
     int length = vars->x->length();
     double p[length];
     vars->x->copyIntoArray(p);
+    int pcount = 0;
+    // cout << "length: " << length << endl;
+    // cout << "n_coef: " << n_coef << endl;
+    // cout << "n_poly: " << n_poly << endl;
+    // cout << "p: " << p[0] << endl;
+    MatrixXd pp(n_coef,n_poly);
+    for (int i=0; i<n_coef; i++){
+      for (int j=0; j<n_poly; j++){
+        // cout << "pcount: " << pcount << endl;
+        pp(i,j) = p[pcount];
+        pcount++;
+      }
+    }
+    poly = pp;
+    // cout << poly << endl;
   }
+  return poly;
+}
+
+double poly_val(VectorXd poly, double ttt){
+  int val = 0;
+  int n = poly.size();
+  for (int i=0; i<n; i++){
+    val = val+poly(i)*pow(ttt, i);
+  }
+}
+
+VectorXd polys_vals(MatrixXd polys){
+  VectorXd vals;
+  int idx = 0;
+  int N = tt.size();
+  vals = VectorXd::Zero(N);
+  for (int i=0; i<N; i++){
+    double ttt = tt.at(i);
+    if (ttt<ts.at(idx)){
+      vals(i) = 0;
+    }else{
+      while( idx< ts.size() && ttt>ts.at(idx+1)+0.0001){
+        idx++;
+      }
+      VectorXd poly;
+      for (int i=0; i < poly.rows(); i++){
+        poly(i) = poly(i,idx);
+      }
+      vals(i) = poly_val(poly,ttt);
+    }
+  }
+  return vals;
 }
 
 void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajectory main
@@ -340,10 +391,8 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
   /* Arrange time according to every wpts using their distance and the total velocity. */
   deque<double> dist; //Distance between each waypoints
   deque<double> yaws; //Yaw changes between each waypoints
-  deque<double> ts;   //Time cost between each waypoints
   dist.clear(); yaws.clear(); ts.clear();
   /* Calc total dist and yaw*/
-  cout << "------/* Calc total dist and yaw*/------------" << endl; 
   for (int i = 0; i< MJwaypoints.size()-1; i++){
     Vec4 wp    = MJwaypoints.at(i);
     Vec4 nextwp = MJwaypoints.at(i+1);
@@ -362,7 +411,55 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
   for (int i=0; i<ts.size(); i++){
     cout << ts.at(i) << endl;
   }
-  MinJerkPoly(MJwaypoints,0,ts,n_order,V0[1],A0[1],V1[1],A1[1]); //Second input x=0;
+  MatrixXd polyx = MinJerkPoly(MJwaypoints,0,ts,n_order,V0[0],A0[0],V1[0],A1[0]); //Second input x=0;
+  MatrixXd polyy = MinJerkPoly(MJwaypoints,1,ts,n_order,V0[1],A0[1],V1[1],A1[1]);
+  MatrixXd polyz = MinJerkPoly(MJwaypoints,2,ts,n_order,V0[2],A0[2],V1[2],A1[2]);
+  // cout << " polyx: "<< endl;
+  // cout << polyx << endl;
+  // cout << " polyy: "<< endl;
+  // cout <<  polyy << endl;
+  // cout << " polyz: "<< endl;
+  // cout <<  polyz << endl;
+
+  tt.clear();
+  for (int i = 0; i < polyx.size()/n_order; i++){
+    double tttemp;
+    for (int j = 0; j < abs((ts.at(i)-ts.at(i+1)))/Trajectory_timestep +1; j++){
+     tttemp = Trajectory_timestep*j;
+     tt.push_back(tttemp+ts.at(i));
+     VectorXd xx = polys_vals(polyx);
+    }
+    
+  }
+  
+  //initialize trajectory1
+  // trajectory1.clear();
+  // double init_time = ros::Time::now().toSec();
+  // int wpc = duration/Trajectory_timestep;
+  // for (int i=0; i<wpc; i++){
+  //   double dt = Trajectory_timestep*i;
+  //   Vec3 xyz;
+  //   Quaterniond q;
+    
+  //   // RPY
+  //   if(dt<=yaw_duration){
+  //     q = rpy2Q(Vec3(0,0,start_rpy[2]+dt*angular_velocity));
+
+  //   }else{
+  //     q = rpy2Q(des_rpy);
+  //   }
+  //   // Position_xyz
+  //   if(dt<=duration){
+  //     xyz = Vec3(start_xyz[0]+dt*vxyz[0],start_xyz[1]+dt*vxyz[1],start_xyz[2]+dt*vxyz[2]);
+  //   }else{
+  //     xyz = des_xyz;
+  //   }
+
+  //   Vec8 traj1;
+  //   traj1 << dt+init_time, xyz[0], xyz[1], xyz[2], q.w(), q.x(), q.y(), q.z();
+  //   trajectory1.push_back(traj1);
+  // }
+
   // cout << "------------------------------------------------------------------------------" << endl;
   // cout << "------------------------------------------------------------------------------" << endl;
   // cout << "Minimun Jerk Traj Waypoint counts: " << wpcounts <<endl;
@@ -382,8 +479,8 @@ void MJwp_Generator(){ // Generate a tasting set of WP for MinJerkTraj
   MJwaypoints.push_back(wp);
   wp << 1, 1, 1, 0;
   MJwaypoints.push_back(wp);
-  wp << 0, 1, 1, 0;
-  MJwaypoints.push_back(wp);
+  // wp << 0, 1, 1, 0;
+  // MJwaypoints.push_back(wp);
   // wp << 0, 0, 1, 0;
   // MJwaypoints.push_back(wp);
 }
