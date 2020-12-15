@@ -350,6 +350,8 @@ double poly_val(VectorXd poly, double ttt){
   for (int i=0; i<n; i++){
     val = val+poly(i)*pow(ttt, i);
   }
+  // cout << " poly: " << poly << endl;
+  // cout << " ttt: " << ttt << endl;
 }
 
 VectorXd polys_vals(MatrixXd polys){
@@ -357,21 +359,24 @@ VectorXd polys_vals(MatrixXd polys){
   int idx = 0;
   int N = tt.size();
   vals = VectorXd::Zero(N);
+  // cout << " polys: " << polys << endl;
   for (int i=0; i<N; i++){
     double ttt = tt.at(i);
-    if (ttt<ts.at(idx)){
+    if (ttt < ts.at(idx)){
       vals(i) = 0;
     }else{
-      while( idx< ts.size() && ttt>ts.at(idx+1)+0.0001){
+      while( idx+1 < ts.size() && ttt>ts.at(idx+1)+0.0001){
         idx++;
       }
-      VectorXd poly;
-      for (int i=0; i < poly.rows(); i++){
-        poly(i) = poly(i,idx);
+      VectorXd poly = VectorXd::Zero(polys.rows());
+      for (int j=0; j < polys.rows(); j++){
+        // cout << "j: " << j << " idx: " << idx << endl;
+        poly(j) = polys(j,idx);
       }
       vals(i) = poly_val(poly,ttt);
     }
   }
+  // cout << " vals: " << vals << endl;
   return vals;
 }
 
@@ -414,22 +419,27 @@ void MinJerkTraj(deque<Vec4> MJwaypoints, double velocity){  //Min Jerk Trajecto
   MatrixXd polyx = MinJerkPoly(MJwaypoints,0,ts,n_order,V0[0],A0[0],V1[0],A1[0]); //Second input x=0;
   MatrixXd polyy = MinJerkPoly(MJwaypoints,1,ts,n_order,V0[1],A0[1],V1[1],A1[1]);
   MatrixXd polyz = MinJerkPoly(MJwaypoints,2,ts,n_order,V0[2],A0[2],V1[2],A1[2]);
-  // cout << " polyx: "<< endl;
-  // cout << polyx << endl;
-  // cout << " polyy: "<< endl;
-  // cout <<  polyy << endl;
-  // cout << " polyz: "<< endl;
-  // cout <<  polyz << endl;
+  /* cout << " polyx: "<< endl;
+     cout << polyx << endl;
+     cout << " polyy: "<< endl;
+     cout <<  polyy << endl;
+     cout << " polyz: "<< endl;
+     cout <<  polyz << endl;*/
 
   tt.clear();
   for (int i = 0; i < polyx.size()/n_order; i++){
     double tttemp;
+    
     for (int j = 0; j < abs((ts.at(i)-ts.at(i+1)))/Trajectory_timestep +1; j++){
      tttemp = Trajectory_timestep*j;
      tt.push_back(tttemp+ts.at(i));
-     VectorXd xx = polys_vals(polyx);
     }
-    
+    VectorXd xx = polys_vals(polyx);
+    VectorXd yy = polys_vals(polyy);
+    VectorXd zz = polys_vals(polyz);
+    cout << " xx: " << xx << endl;
+    cout << " yy: " << yy << endl;
+    cout << " zz: " << zz << endl;
   }
   
   //initialize trajectory1
@@ -475,10 +485,10 @@ void MJwp_Generator(){ // Generate a tasting set of WP for MinJerkTraj
   Vec4 wp; // x y z yaw
   wp << 0, 0, 1, 0;
   MJwaypoints.push_back(wp);
-  wp << 1, 0, 1, 0;
+  wp << 0, 1, 1, 0;
   MJwaypoints.push_back(wp);
-  wp << 1, 1, 1, 0;
-  MJwaypoints.push_back(wp);
+  // wp << 1, 1, 1, 0;
+  // MJwaypoints.push_back(wp);
   // wp << 0, 1, 1, 0;
   // MJwaypoints.push_back(wp);
   // wp << 0, 0, 1, 0;

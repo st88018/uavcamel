@@ -68,16 +68,6 @@ target_link_libraries(trj_fj005
     gfortran
     )
 
-add_executable(main
-                src/main.cpp
-                3rdPartLib/QuadProgpp/src/Array.cc
-                3rdPartLib/QuadProgpp/src/QuadProg++.cc)
-target_link_libraries(main
-    ${catkin_LIBRARIES}
-    ${YAML_CPP_LIBRARIES}
-    ${Sophus_LIBRARIES}
-    )
-
 add_executable(OOQP
                 src/OOQP.cpp
                 3rdPartLib/OOQP/lib

@@ -1,2 +1,0 @@
-/usr/bin/ar qc libquadprog.a  CMakeFiles/quadprog.dir/Array.cc.o CMakeFiles/quadprog.dir/QuadProg++.cc.o
-/usr/bin/ranlib libquadprog.a
