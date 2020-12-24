@@ -148,7 +148,7 @@ void traj_pub(){
   // Trajectory current time > duration than goes on to next stage
   if (traj1_deque_front[0] > traj1_information[1]){ Mission_stage++;}
 }
-// FSM
+// FSM_WP
 void Finite_state_WP_mission(){
   
   // Generate trajectory while mission stage change
@@ -279,7 +279,7 @@ int main(int argc, char **argv){
   ros::Time last_request = ros::Time::now();
   ros::Time init_time = ros::Time::now();
   while(ros::ok()){
-    /*Update takeoff Position and Mission**********************************************/
+    /*Update takeoff Position and Mission**********************************/
     if(Initialfromtakeoffpos)
     {
       /*Generate waypoits**************************************************************/
@@ -327,14 +327,14 @@ int main(int argc, char **argv){
           last_request = ros::Time::now();
         }
       }
-    /*Mission start here*****************************************************/
+    /*Mission start here***************************************************/
     // MJwp_Generator();
     // MinJerkTraj(MJwaypoints, 1);
     Finite_state_WP_mission();
     local_pos_pub.publish(pose);
     ros::spinOnce();
     rate.sleep();
-    /*Mission End here*******************************************************/
+    /*Mission End here*****************************************************/
     if (Mission_stage > waypoints.size()){
       cout << "------------------------------------------------------------------------------" << endl;
       cout << "------------------------------------------------------------------------------" << endl;
@@ -349,7 +349,7 @@ int main(int argc, char **argv){
       cout << "------------------------------------------------------------------------------" << endl;
       cout << "------------------------------------------------------------------------------" << endl;
     }
-    /*Mission information cout***********************************************/
+    /*Mission information cout*********************************************/
     int coutcounter;
     if(coutcounter > 3){ //reduce cout rate
       cout << "------------------------------------------------------------------------------" << endl;

@@ -4,6 +4,3 @@
         <param name="Initialfromtakeoffpos" type="bool" value="true" />
     </node>
 </launch>
-
-
-
