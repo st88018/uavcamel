@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Twist.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <mavros_msgs/CommandBool.h>
 #include <mavros_msgs/SetMode.h>
@@ -44,6 +45,7 @@ Vec3 uav_lp_p;
 Vec4 uav_lp_q;
 Vec8 Current_stage_mission;
 geometry_msgs::PoseStamped pose;
+geometry_msgs::Twist twist;
 // Initial trajectories
 deque<Vec8> trajectory1;
 Vec2 traj1_information;
@@ -124,6 +126,25 @@ void constantVtraj( double end_x, double end_y, double end_z, double end_yaw_rad
     traj1 << dt+init_time, xyz[0], xyz[1], xyz[2], q.w(), q.x(), q.y(), q.z();
     trajectory1.push_back(traj1);
   }
+}
+// For Twist publish
+void twist_pub(){
+  // double current_time = ros::Time::now().toSec();
+  // Vec8 traj1_deque_front = trajectory1.front();
+
+  // while (current_time - traj1_deque_front[0] > 0){
+  //   trajectory1.pop_front();
+  //   traj1_deque_front = trajectory1.front();
+  // }
+  
+  // twist.header.frame_id = "world";
+  // twist.twist.linear.x = vx;
+  // twist.twist.linear.y = vy;
+  // twist.twist.linear.z = vz;
+  // odom.twist.twist.angular.z = vth;
+
+  // Trajectory current time > duration than goes on to next stage
+  // if (traj1_deque_front[0] > traj1_information[1]){ Mission_stage++;}
 }
 
 // For Trajectory publish
@@ -243,6 +264,8 @@ int main(int argc, char **argv){
       ("/mavros/local_position/pose", 10, uav_lp_cb);
   ros::Publisher local_pos_pub = nh.advertise<geometry_msgs::PoseStamped>
       ("/mavros/setpoint_position/local", 10);
+  ros::Publisher local_twist_pub = nh.advertise<geometry_msgs::Twist>
+      ("/mavros/setpoint_velocity/cmd_vel_unstamped", 10);
   ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>
       ("/mavros/cmd/arming");
   ros::ServiceClient set_mode_client = nh.serviceClient<mavros_msgs::SetMode>
