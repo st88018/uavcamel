@@ -149,8 +149,7 @@ void traj_pub(){
   if (traj1_deque_front[0] > traj1_information[1]){ Mission_stage++;}
 }
 // FSM_WP
-void Finite_state_WP_mission(){
-  
+void Finite_state_WP_mission(){ 
   // Generate trajectory while mission stage change
   if (Mission_stage != Current_Mission_stage){
     Vec8 traj1;
@@ -250,7 +249,7 @@ int main(int argc, char **argv){
       ("/mavros/set_mode");
   //the setpoint publishing rate MUST be faster than 2Hz
   ros::Rate rate(25.0);
-  //wait for FCU connection 
+  //wait for FCU connection
   cout << "Waiting for FCU connection " << endl;
   while(ros::ok() && !current_state.connected){
     ros::spinOnce();
