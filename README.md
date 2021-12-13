@@ -56,10 +56,17 @@ This repository provide a easy and safe way to command the UAV in the VICON room
     ```
 ## UAVCAMEL Misson documentation
 
-1. CSV file
+3. Please make sure the path is correct at cammel.cpp line 54
+    ```
+    string MissionPath = "/home/usr/camel_ws/src/uavcamel/src/utils/Missions/Mission.csv";
+    ```
+2. CSV file
     The [Mission.csv](src/utils/Missions/Mission.csv) is the preprogrammed mission file:
 
 |  Mission Type |               |               |               |               |               |               |               |
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 | 1.TakeOff     |               |               |   Z position  |               |               |               |  wait time(s) |
 | 2.constVtraj  |   X position  |   Y position  |   Z position  |  heding(rad)  |   velocity    |  angular vel  |  wait time(s) |
+| 3.AMtraj      |   X position  |   Y position  |   Z position  |  heding(rad)  |               |               |               |
+| 4.RTL         |               |               |               |  heding(rad)  |   velocity    |  angular vel  |  wait time(s) |
+| 5.Land        |               |               |               |  heding(rad)  |   velocity    |  angular vel  |               |
