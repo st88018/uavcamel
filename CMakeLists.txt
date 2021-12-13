@@ -10,13 +10,16 @@ add_compile_options(-std=c++11)
 find_package(catkin REQUIRED COMPONENTS
     roscpp
     std_msgs
+    genmsg
+    message_generation
     mavros_msgs
     geometry_msgs
-    )
+    sensor_msgs
+)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package (Eigen3 REQUIRED)
-find_package (yaml-cpp REQUIRED)
+find_package (OpenCV 4 REQUIRED)
 find_package (Sophus REQUIRED )
 
 
@@ -42,45 +45,15 @@ catkin_package(
 include_directories(
     ${catkin_INCLUDE_DIRS}
     ${Sophus_INCLUDE_DIRS}
-    ${YAML_CPP_INCLUDE_DIR}
-    "${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/QuadProgpp/src"
-    "${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/OOQP/include"
+    ${OpenCV_INCLUDE_DIRS}
     )
 
-link_directories("${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/OOQP/lib"
-                 "${CMAKE_CURRENT_SOURCE_DIR}/3rdPartLib/MA27/src")
 
 ######################################################################
-add_executable(trj_fj005
-    src/trj_fj005.cpp
-    3rdPartLib/OOQP/lib
-    3rdPartLib/OOQP/include)
-target_link_libraries(trj_fj005
+add_executable(camel
+    src/camel.cpp
+)
+target_link_libraries(camel
     ${catkin_LIBRARIES}
-    ${YAML_CPP_LIBRARIES}
-    ${Sophus_LIBRARIES}
-    ooqpgensparse
-    ooqpsparse
-    ooqpgondzio
-    ooqpbase
-    blas
-    ma27
-    gfortran
-    )
-
-add_executable(OOQP
-                src/OOQP.cpp
-                3rdPartLib/OOQP/lib
-                3rdPartLib/OOQP/include)
-target_link_libraries(OOQP
-    ${catkin_LIBRARIES}
-    ${YAML_CPP_LIBRARIES}
-    ${Sophus_LIBRARIES}
-    ooqpgensparse
-    ooqpsparse
-    ooqpgondzio
-    ooqpbase
-    blas
-    ma27
-    gfortran
-    )
+    ${OpenCV_LIBRARIES}
+)

@@ -1,12 +1,19 @@
 #ifndef KINETIC_MATH
 #define KINETIC_MATH
 
-#include "eigen_typedef.h"
+#include "common.h"
+#include <eigen3/Eigen/Eigen>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/Geometry>
 
 //In ENU frame: X-roll Y-pitch Z-yaw
 //Euler Angle follow Yaw–Pitch–Roll Z1*Y2*X3
 //Hence: R=R_yaw*R_pitch*R_roll
 //       R=Rz*Ry*Rx
+
+
+using namespace Eigen;
+
 inline Matrix3d rpy2R(const Vec3 rpy)
 {
     double r=rpy(0);
@@ -43,11 +50,11 @@ inline Vec3 R2rpy(const Matrix3d R)
 {
     Vec3 rpy;
     double roll, pitch, yaw;
-    double r12 = R(0,1);
-    double r22 = R(1,1);
-    double r31 = R(2,0);
-    double r32 = R(2,1);
-    double r33 = R(2,2);
+//    double r12 = R(0,1);
+//    double r22 = R(1,1);
+//    double r31 = R(2,0);
+//    double r32 = R(2,1);
+//    double r33 = R(2,2);
 
     roll  = atan2(R(2,1), R(2,2));
     //pitch = asin(-R(2,0))
