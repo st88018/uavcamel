@@ -57,5 +57,9 @@ This repository provide a easy and safe way to command the UAV in the VICON room
 ## UAVCAMEL Misson documentation
 
 1. CSV file
-    The [src/utils/Missions/Mission.csv](src/utils/Missions/Mission.csv) is the preprogrammed mission file:
-    
+    The [Mission.csv](src/utils/Missions/Mission.csv) is the preprogrammed mission file:
+
+|  Mission Type |               |               |               |               |               |               |               |
+| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
+| 1.TakeOff     |               |               |   Z position  |               |               |               |  wait time(s) |
+| 2.constVtraj  |   X position  |   Y position  |   Z position  |  heding(rad)  |   velocity    |  angular vel  |  wait time(s) |
