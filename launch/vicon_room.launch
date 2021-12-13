@@ -1,6 +1,4 @@
 <launch>
     <node pkg="uavcamel" type="camel" name="note_camel" output="screen">
-
-        <param name="Initialfromtakeoffpos" type="bool" value="true" />
     </node>
 </launch>
