@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="uavcamel" type="trj_fj005" name="note_trj_fj005" output="screen">
+    <node pkg="uavcamel" type="camel" name="note_camel" output="screen">
 
         <param name="Initialfromtakeoffpos" type="bool" value="true" />
     </node>
