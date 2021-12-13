@@ -55,4 +55,7 @@ This repository provide a easy and safe way to command the UAV in the VICON room
     rosrun uavcamel camel
     ```
 ## UAVCAMEL Misson documentation
-    The [Mission.csv](src/utils/Missions/Mission.csv) is the preprogrammed mission file:
+
+1. CSV file
+    The [src/utils/Missions/Mission.csv](src/utils/Missions/Mission.csv) is the preprogrammed mission file:
+    
