@@ -25,7 +25,7 @@ This repository provide a easy and safe way to command the UAV in the VICON room
    ```
    source ~/camel_ws/devel/setup.bash
    ```
-## Play camel in PX4 Software Simulation
+## Play UAVCAMEL in PX4 Software Simulation
 1. Downloadn and install the PX4 (1.11.0)
    ```
    git clone https://github.com/PX4/PX4-Autopilot.git
@@ -37,11 +37,11 @@ This repository provide a easy and safe way to command the UAV in the VICON room
    sudo apt upgrade libignition-math2
    ```
 2. Launch the Simulation environment
-    Gazebo:
+    (Gazebo)
     ```
     make px4_sitl_default gazebo
     ```
-    Jmavsim:
+    (Jmavsim)
     ```
     make px4_sitl_default jmavsim
     ```
@@ -54,3 +54,5 @@ This repository provide a easy and safe way to command the UAV in the VICON room
     ```
     rosrun uavcamel camel
     ```
+## UAVCAMEL Misson documentation
+    The [Mission.csv](src/utils/Missions/Mission.csv) is the preprogrammed mission file:

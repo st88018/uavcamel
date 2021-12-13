@@ -55,6 +55,8 @@ bool   Force_start   = false;
 bool   ShutDown = false;
 bool   ForcePIDcontroller = false;
 bool   KFok;
+/* Mission Path */
+string MissionPath = "/home/jeremy/camel_ws/src/uavcamel/src/utils/Missions/Mission.csv";
 
 
 Vec4 uav_poistion_controller_PID(Vec4 pose, Vec4 setpoint){ //XYZyaw
@@ -311,7 +313,6 @@ int main(int argc, char **argv)
     posctl_set_mode.request.custom_mode = "POSCTL";
     mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
-    nh.getParam("/FSM_node/Force_start", Force_start);
     Zero4 << 0,0,0,0;
     Zero7 << 0,0,0,0,0,0,0;
     UAV_AttitudeTarget.thrust = 0.3;
@@ -323,7 +324,7 @@ int main(int argc, char **argv)
         if (!System_init){
             System_initT = ros::Time::now().toSec();
             init_time = ros::Time::now();
-            waypoints = Mission_generator(); //Generate stages
+            waypoints = Mission_generator(MissionPath); //Generate stages
             cout << " System Initialized" << " Force_start: " << Force_start << endl;
             /* Waypoints before starting */ 
             uav_pose_pub(Zero7);
