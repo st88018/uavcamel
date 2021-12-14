@@ -66,7 +66,7 @@ This repository provide a easy and safe way to command the UAV in the VICON room
 |  Mission Type |               |               |               |               |               |               |               |
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 | 1.TakeOff     |               |               |   Z position  |               |               |               |  wait time(s) |
-| 2.constVtraj  |   X position  |   Y position  |   Z position  |  heding(rad)  |   velocity    |  angular vel  |  wait time(s) |
-| 3.AMtraj      |   X position  |   Y position  |   Z position  |  heding(rad)  |               |               |               |
-| 4.RTL         |               |               |               |  heding(rad)  |   velocity    |  angular vel  |  wait time(s) |
-| 5.Land        |               |               |               |  heding(rad)  |   velocity    |  angular vel  |               |
+| 2.constVtraj  |   X position  |   Y position  |   Z position  |  heading(rad)  |   velocity    |  angular vel  |  wait time(s) |
+| 3.AMtraj      |   X position  |   Y position  |   Z position  |  heading(rad)  |               |               |               |
+| 4.RTL         |               |               |               |  heading(rad)  |   velocity    |  angular vel  |  wait time(s) |
+| 5.Land        |               |               |               |  heading(rad)  |   velocity    |  angular vel  |               |
