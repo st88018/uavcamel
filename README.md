@@ -63,6 +63,12 @@ This repository provide a easy and safe way to command the UAV in the VICON room
 2. CSV file
     The [Mission.csv](src/utils/Missions/Mission.csv) is the preprogrammed mission file:
 
+    - TakeOff: TakeOff to a certain altitude and wait.
+    - constVtraj: UAV move toward the waypoint in constant velocity.
+    - AMtraj: UAV move through a series of waypoints using optimal AM_trajectory (All of the state3 will be connected together).
+    - RTL: UAV fly to the takeoff position with no altitude change.
+    - Land: UAV land vertically.
+
 |  Mission Type |               |               |               |               |               |               |               |
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 | 1.TakeOff     |               |               |   Z position  |               |               |               |  wait time(s) |
