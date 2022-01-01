@@ -11,6 +11,7 @@ This repository provide a easy and safe way to command the UAV in the VICON room
     sudo apt install -y ros-$ROS_DISTRO-mavros
     sudo apt install -y ros-$ROS_DISTRO-vrpn
     sudo apt install -y ros-$ROS_DISTRO-vrpn-client-ros
+    sudo apt install -y ros-$ROS_DISTRO-sophus
     ```
 2. Clone the packages into your catkin workspace and compile
     (the following instructions assume your catkin workspace is at: ~/camel_ws/src)
@@ -72,7 +73,7 @@ This repository provide a easy and safe way to command the UAV in the VICON room
 |  Mission Type |               |               |               |               |               |               |               |
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
 | 1.TakeOff     |               |               |   Z position  |               |               |               |  wait time(s) |
-| 2.constVtraj  |   X position  |   Y position  |   Z position  |  heding(rad)  |   velocity    |  angular vel  |  wait time(s) |
-| 3.AMtraj      |   X position  |   Y position  |   Z position  |  heding(rad)  |               |               |               |
-| 4.RTL         |               |               |               |  heding(rad)  |   velocity    |  angular vel  |  wait time(s) |
-| 5.Land        |               |               |               |  heding(rad)  |   velocity    |  angular vel  |               |
+| 2.constVtraj  |   X position  |   Y position  |   Z position  |  heading(rad)  |   velocity    |  angular vel  |  wait time(s) |
+| 3.AMtraj      |   X position  |   Y position  |   Z position  |  heading(rad)  |               |               |               |
+| 4.RTL         |               |               |               |  heading(rad)  |   velocity    |  angular vel  |  wait time(s) |
+| 5.Land        |               |               |               |  heading(rad)  |   velocity    |  angular vel  |               |
