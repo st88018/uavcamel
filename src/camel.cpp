@@ -170,19 +170,17 @@ void uav_pub(bool pub_trajpose, bool pub_pidtwist){
             uav_pose_pub(uavposepub);
         }
         if (traj_pos_deque_front[0] > traj_pos_information[1]){
-            if(Mission_state == 1){
-                MyFinishedStage = true;
-            }
+            MyFinishedStage = MyFinishedStage;
             if(Waitallies){
                 alley_ready_pub(MyFinishedStage);
-                if(Mate1FinishedStage && Mate2FinishedStage){
+                if(MyFinishedStage == Mate1FinishedStage && MyFinishedStage == Mate2FinishedStage){
                     Mission_stage++;
                     trajectory_pos.clear();
                     uav_pose_pub(Zero7);
                     //MyFinishedStage = false;
                 }
             }else{
-                Mission_stage++;
+                MyFinishedStage++;
                 trajectory_pos.clear();
                 uav_pose_pub(Zero7);
             }
